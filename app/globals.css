@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #faf6ec;
+  color: #1b1a15;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #d9a441;
+  color: #142a1e;
+}
+
+/* Anchor offset under the fixed header */
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
+html, body { overflow-x: clip; }
+
+/* Mobile tap highlight removal */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Shared component classes ---- */
+@layer components {
+  .focus-ring { @apply outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-offset-2 focus-visible:ring-offset-cream; }
+  .btn-primary { @apply focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-clay px-7 py-3 text-[15px] font-semibold text-white shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#c9531a] hover:shadow-lift active:translate-y-0; }
+  .btn-secondary { @apply focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-leaf/25 bg-transparent px-7 py-3 text-[15px] font-semibold text-forest transition-all duration-200 hover:border-forest hover:bg-forest hover:text-cream; }
+  .icon-btn { @apply focus-ring grid h-11 w-11 place-items-center rounded-full text-forest transition-colors hover:bg-sand; }
+  .qty-btn { @apply focus-ring grid h-10 w-10 place-items-center rounded-full text-forest transition-colors hover:bg-sand disabled:cursor-not-allowed disabled:opacity-35; }
+  .field { @apply w-full rounded-xl border border-leaf/20 bg-white/70 px-4 py-3 text-ink outline-none transition-all placeholder:text-ink/35 focus:border-forest focus:ring-4 focus:ring-leaf/15; }
+}
+
+/* ---- Scroll reveal ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

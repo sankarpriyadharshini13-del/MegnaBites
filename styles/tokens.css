@@ -1,0 +1,18 @@
+/* Design tokens — Modern South Indian Heritage × Premium Minimalism */
+:root {
+  --color-ivory: #fbf7ef;
+  --color-ivory-deep: #f3ecdd;
+  --color-forest: #1b3d2a;
+  --color-forest-deep: #12291c;
+  --color-forest-card: #1f4a31;
+  --color-burnt: #e8672a;
+  --color-burnt-deep: #c9531a;
+  --color-ink: #2a2a26;
+  --color-line: rgba(27, 61, 42, 0.12);
+
+  --radius-card: 2.25rem;
+  --radius-pill: 999px;
+  --shadow-soft: 0 10px 30px -14px rgba(18, 41, 28, 0.2);
+  --shadow-lift: 0 30px 60px -30px rgba(18, 41, 28, 0.45);
+  --focus-ring: 0 0 0 3px var(--color-ivory), 0 0 0 5px var(--color-burnt);
+}

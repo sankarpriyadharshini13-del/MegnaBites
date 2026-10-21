@@ -7,7 +7,7 @@ import { ArrowIcon } from "@/components/ui/Icons";
 export default function FeaturedProducts() {
   const items = featuredProducts();
   return (
-    <section id="featured" aria-labelledby="featured-title" className="py-16 md:py-20 lg:py-28">
+    <section id="featured" aria-labelledby="featured-title" className="py-12 md:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end md:mb-12">

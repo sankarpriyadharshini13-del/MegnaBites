@@ -48,7 +48,7 @@ const details = [
 
 export default function Contact() {
   return (
-    <section id="contact" className="relative overflow-hidden bg-sand/70 py-16 md:py-20 lg:py-28">
+    <section id="contact" className="relative overflow-hidden bg-sand/70 py-12 md:py-16 lg:py-20">
       <div className="relative mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 md:gap-14 md:grid-cols-2 lg:px-8">
         <Reveal>
           <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-clay sm:text-xs">

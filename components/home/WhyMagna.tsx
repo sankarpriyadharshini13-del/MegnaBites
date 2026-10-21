@@ -6,7 +6,7 @@ const icons = { pin: PinIcon, stone: StoneIcon, family: FamilyIcon };
 
 export default function WhyMagna() {
   return (
-    <section id="why-magna-bites" aria-labelledby="why-title" className="relative overflow-hidden bg-forest py-16 text-cream md:py-20 lg:py-28">
+    <section id="why-magna-bites" aria-labelledby="why-title" className="relative overflow-hidden bg-forest py-12 text-cream md:py-16 lg:py-20">
       <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-clay/10 blur-3xl" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>

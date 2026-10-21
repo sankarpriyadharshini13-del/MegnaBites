@@ -3,9 +3,9 @@ import Logo from "@/components/ui/Logo";
 import { site } from "@/data/site";
 
 const socialLinks = [
-  { name: "Instagram", href: "#", icon: "📸" },
-  { name: "Facebook", href: "#", icon: "👤" },
-  { name: "WhatsApp", href: "#", icon: "💬" },
+  { name: "Instagram", href: "https://instagram.com/magnaecobites", icon: "📸" },
+  { name: "Facebook", href: "https://facebook.com/magnaecobites", icon: "👤" },
+  { name: "WhatsApp", href: "https://wa.me/919876543210", icon: "💬" },
 ];
 
 export default function Footer() {
@@ -20,9 +20,9 @@ export default function Footer() {
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
           {/* Brand Section */}
-          <div className="lg:col-span-1">
+          <div className="xl:col-span-1">
             <Logo onDark />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-cream/80">
               Idli podi, country sugar and moringa blends — stone-ground in small batches in Kolathur, Chennai.
@@ -55,6 +55,33 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
+            </ul>
+          </nav>
+
+          {/* Policies */}
+          <nav aria-label="Policies">
+            <h3 className="font-display text-lg font-semibold text-cream">Policies</h3>
+            <ul className="mt-4 space-y-3">
+              <li>
+                <Link href="/privacy" className="text-sm transition-colors duration-200 hover:text-honey hover:underline hover:underline-offset-4">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-sm transition-colors duration-200 hover:text-honey hover:underline hover:underline-offset-4">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/shipping" className="text-sm transition-colors duration-200 hover:text-honey hover:underline hover:underline-offset-4">
+                  Shipping Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/returns" className="text-sm transition-colors duration-200 hover:text-honey hover:underline hover:underline-offset-4">
+                  Returns & Refunds
+                </Link>
+              </li>
             </ul>
           </nav>
 
@@ -124,10 +151,10 @@ export default function Footer() {
               © {new Date().getFullYear()} Magna Eco Bites. All rights reserved.
             </p>
             <div className="flex gap-6 text-xs sm:text-sm">
-              <Link href="#" className="transition-colors duration-200 hover:text-honey">
+              <Link href="/privacy" className="transition-colors duration-200 hover:text-honey">
                 Privacy Policy
               </Link>
-              <Link href="#" className="transition-colors duration-200 hover:text-honey">
+              <Link href="/terms" className="transition-colors duration-200 hover:text-honey">
                 Terms of Service
               </Link>
             </div>

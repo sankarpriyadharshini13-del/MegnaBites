@@ -6,27 +6,18 @@ const founders = [
     role: "Director And Export Sales",
     initials: "M",
     gradient: "from-clay to-honey",
-    note: "Oversees sourcing and quality — every batch tastes it.",
-    icon: "🌾",
-    color: "bg-clay",
   },
   {
     name: "Sathish",
     role: "Branch Manager",
     initials: "S",
     gradient: "from-leaf to-forest",
-    note: "Runs operations and keeps the kitchen stone-grinding.",
-    icon: "👨‍🍳",
-    color: "bg-leaf",
   },
   {
     name: "Dinesh Kumar",
     role: "Digital Marketing and E-commerce",
     initials: "D",
     gradient: "from-honey to-clay",
-    note: "Manages digital presence and online sales — connecting tradition with modern commerce.",
-    icon: "💻",
-    color: "bg-honey",
   },
 ];
 
@@ -131,22 +122,16 @@ export default function About() {
                 <article className="group relative overflow-hidden rounded-2xl border border-leaf/10 bg-white/80 p-6 shadow-soft transition-all duration-300 hover:border-leaf/30 hover:shadow-md">
                   <div className="flex flex-col items-center text-center">
                     {/* Avatar */}
-                    <div className="relative">
-                      <div
-                        className={`grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br ${founder.gradient} font-display text-3xl text-cream shadow-soft transition-transform duration-300 group-hover:scale-110`}
-                      >
-                        {founder.initials}
-                      </div>
-                      <div className={`absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full ${founder.color} text-lg shadow-sm`}>
-                        {founder.icon}
-                      </div>
+                    <div
+                      className={`grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br ${founder.gradient} font-display text-3xl text-cream shadow-soft transition-transform duration-300 group-hover:scale-110`}
+                    >
+                      {founder.initials}
                     </div>
 
                     {/* Info */}
-                    <div className="mt-4 flex-1">
+                    <div className="mt-4">
                       <h4 className="font-display text-xl font-semibold text-forest">{founder.name}</h4>
                       <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-clay">{founder.role}</p>
-                      <p className="mt-3 text-sm leading-relaxed text-ink/60">{founder.note}</p>
                     </div>
                   </div>
                 </article>

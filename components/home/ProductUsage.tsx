@@ -81,14 +81,14 @@ export default function ProductUsage() {
 
                 {/* Content */}
                 <div className="flex flex-col flex-grow p-6 -mt-8">
-                  <div className="rounded-2xl bg-white/90 p-6 shadow-sm">
+                  <div className="flex flex-col flex-grow rounded-2xl bg-white/90 p-6 shadow-sm">
                     <h3 className="font-display text-2xl font-semibold text-forest">{example.dish}</h3>
                     <p className="mt-3 text-sm leading-relaxed text-ink/70">
                       {example.description}
                     </p>
-                    <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-leaf">
-                      <span className="text-lg">💡</span>
-                      {example.servingTip}
+                    <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-semibold text-leaf">
+                      <span className="text-lg flex-shrink-0">💡</span>
+                      <span>{example.servingTip}</span>
                     </div>
                   </div>
 

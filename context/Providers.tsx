@@ -2,7 +2,9 @@
 
 import { AuthProvider } from "./AuthContext";
 import { CartProvider } from "./CartContext";
+import { ProductsProvider } from "./ProductsContext";
 import { UIProvider, useUI } from "./UIContext";
+import type { Product } from "@/types";
 
 function CartWithUI({ children }: { children: React.ReactNode }) {
   const { open } = useUI();
@@ -10,11 +12,13 @@ function CartWithUI({ children }: { children: React.ReactNode }) {
   return <CartProvider onAdd={() => open("cart")}>{children}</CartProvider>;
 }
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({ children, initialProducts }: { children: React.ReactNode; initialProducts: Product[] }) {
   return (
     <UIProvider>
       <AuthProvider>
-        <CartWithUI>{children}</CartWithUI>
+        <ProductsProvider initial={initialProducts}>
+          <CartWithUI>{children}</CartWithUI>
+        </ProductsProvider>
       </AuthProvider>
     </UIProvider>
   );

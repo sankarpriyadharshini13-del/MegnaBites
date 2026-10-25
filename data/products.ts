@@ -1,7 +1,9 @@
 import type { Product } from "@/types";
 
 /**
- * SINGLE SOURCE OF TRUTH for the catalogue.
+ * FALLBACK catalogue. The live catalogue is the `products` table in Supabase, managed from
+ * Admin → Products & Stock and read through lib/server/publicProducts.ts. This list is only
+ * shown if the database can't be reached (or isn't set up yet) so the storefront never goes blank.
  *
  * Names + descriptions come from the existing Magna Eco Bites site.
  * `priceInr` and `packSize` are intentionally null: the existing site shows
@@ -24,6 +26,7 @@ export const products: Product[] = [
     image: null,
     imageAlt: "Magna Eco Bites Idli Podi pack",
     featured: true,
+    stock: null,
   },
   {
     id: "country-sugar",
@@ -38,6 +41,7 @@ export const products: Product[] = [
     image: null,
     imageAlt: "Magna Eco Bites Country Sugar pack",
     featured: true,
+    stock: null,
   },
   {
     id: "moringa-idli-podi",
@@ -53,6 +57,7 @@ export const products: Product[] = [
     imageAlt:
       "Kraft pack of Magna Eco Bites Moringa Idli Podi beside a wooden bowl of the podi",
     featured: true,
+    stock: null,
   },
 ];
 

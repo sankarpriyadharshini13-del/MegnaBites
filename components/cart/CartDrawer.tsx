@@ -9,6 +9,7 @@ import { TrashIcon, BagIcon } from "@/components/ui/Icons";
 import { useCart } from "@/context/CartContext";
 import { useUI } from "@/context/UIContext";
 import { useAuth } from "@/context/AuthContext";
+import { useProducts } from "@/context/ProductsContext";
 import { startCheckout } from "@/services/checkout";
 import { formatInr } from "@/lib/format";
 
@@ -16,6 +17,7 @@ export default function CartDrawer() {
   const { panel, close } = useUI();
   const { lines, count, subtotal, hasUnpriced, setQuantity, remove, maxQty } = useCart();
   const { user } = useAuth();
+  const { getById } = useProducts();
 
   const footer = lines.length ? (
     <div>
@@ -29,7 +31,7 @@ export default function CartDrawer() {
           We&apos;ll confirm the total when you place your order.
         </p>
       )}
-      <button type="button" className="btn-primary mt-4 w-full" onClick={() => startCheckout(lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })), user)}>
+      <button type="button" className="btn-primary mt-4 w-full" onClick={() => startCheckout(lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })), user, getById)}>
         Place order by email
       </button>
       <p className="mt-2 text-center text-xs text-ink/50">Online payment is coming soon. This opens a pre-filled order email.</p>

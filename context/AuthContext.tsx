@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import * as auth from "@/services/auth";
+import { checkAdmin } from "@/services/adminAccess";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import type { UserProfile } from "@/types";
 
@@ -10,6 +11,8 @@ interface AuthValue {
   /** False until the initial session check finished. */
   ready: boolean;
   configured: boolean;
+  /** True when the server confirmed this user is an admin. */
+  isAdmin: boolean;
   /** True right after the user opened a password-recovery email link. */
   recovering: boolean;
   signIn: typeof auth.signIn;
@@ -25,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [ready, setReady] = useState(false);
   const [recovering, setRecovering] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -45,6 +49,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       off();
     };
   }, []);
+
+  // Ask the server (not the browser) whether this account is an admin.
+  useEffect(() => {
+    let alive = true;
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    checkAdmin().then((ok) => alive && setIsAdmin(ok));
+    return () => {
+      alive = false;
+    };
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const signOut = useCallback(async () => {
     await auth.signOut();
@@ -67,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ready,
       configured: isSupabaseConfigured,
       recovering,
+      isAdmin,
       signIn: auth.signIn,
       signUp: auth.signUp,
       signOut,
@@ -74,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updatePassword: auth.updatePassword,
       updateProfile,
     }),
-    [user, ready, recovering, signOut, updateProfile],
+    [user, ready, recovering, isAdmin, signOut, updateProfile],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

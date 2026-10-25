@@ -52,3 +52,18 @@ export const StoneIcon = (p: P) => (
 export const FamilyIcon = (p: P) => (
   <svg {...base} {...p}><circle cx="8" cy="7" r="3" /><circle cx="17" cy="9" r="2.5" /><path d="M2 20a6 6 0 0 1 12 0M14 20a4.5 4.5 0 0 1 8 0" /></svg>
 );
+export const SproutIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M12 21v-9" /><path d="M12 12C12 8 9 5 4 5c0 5 3 7 8 7Z" /><path d="M12 14c0-3 2.5-6 8-6 0 4.5-3 6-8 6Z" /></svg>
+);
+export const BasketIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M3 10h18l-2 10H5L3 10Z" /><path d="m8 10 4-6 4 6M9 14v3M15 14v3M12 14v3" /></svg>
+);
+export const MailIcon = (p: P) => (
+  <svg {...base} {...p}><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+);
+export const CheckIcon = (p: P) => (
+  <svg {...base} width={16} height={16} {...p}><path d="M20 6 9 17l-5-5" /></svg>
+);
+export const ChevronIcon = (p: P) => (
+  <svg {...base} width={18} height={18} {...p}><path d="m6 9 6 6 6-6" /></svg>
+);

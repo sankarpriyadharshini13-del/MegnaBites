@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import Providers from "@/context/Providers";
+import { getPublicProducts } from "@/lib/server/publicProducts";
 import "@/styles/tokens.css";
 import "./globals.css";
 
@@ -13,10 +14,14 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { themeColor: "#1b3d2a", width: "device-width", initialScale: 1 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+// The catalogue comes from the database on every request, so the layout cannot be prerendered.
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const products = await getPublicProducts();
   return (
     <html lang="en" className={`${fraunces.variable} ${manrope.variable}`}>
-      <body className="font-body"><Providers>{children}</Providers></body>
+      <body className="font-body"><Providers initialProducts={products}>{children}</Providers></body>
     </html>
   );
 }

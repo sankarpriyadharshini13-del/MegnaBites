@@ -60,3 +60,7 @@ html, body { overflow-x: clip; }
     transition: none;
   }
 }
+
+/* Horizontal carousels: keep swipe/scroll, hide the bar */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

@@ -1,122 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useId, useState } from "react";
+import { faqs } from "@/data/brand";
+import { ArrowIcon, ChevronIcon } from "@/components/ui/Icons";
 import Reveal from "./Reveal";
-
-const faqs = [
-  {
-    question: "How do I place an order?",
-    answer: "Browse our shop, add products to your cart, and proceed to checkout. You'll receive an order confirmation email with all the details.",
-  },
-  {
-    question: "What payment methods do you accept?",
-    answer: "We accept all major payment methods including UPI, credit/debit cards, and net banking. Payment is securely processed at checkout.",
-  },
-  {
-    question: "How are your products sourced?",
-    answer: "We source ingredients directly from trusted local farmers in Tamil Nadu. All products are packed in small batches in our Kolathur, Chennai kitchen.",
-  },
-  {
-    question: "How should I store the products?",
-    answer: "Store in a cool, dry place away from direct sunlight. Once opened, keep in an airtight container to maintain freshness. Our products are best consumed within 3-4 months of opening.",
-  },
-  {
-    question: "What is your shipping policy?",
-    answer: "We ship across India. Orders are typically processed within 1-2 business days. Shipping times vary by location - metro cities usually receive orders within 3-5 business days.",
-  },
-  {
-    question: "Can I return or exchange products?",
-    answer: "Due to the nature of food products, we accept returns only for damaged or incorrect items. Please contact us within 48 hours of delivery if you have any issues.",
-  },
-  {
-    question: "Are your products suitable for all diets?",
-    answer: "Our products are vegetarian and naturally gluten-free. If you have specific dietary requirements or allergies, please check the product description or contact us before ordering.",
-  },
-  {
-    question: "Do you offer bulk orders for businesses?",
-    answer: "Yes, we welcome bulk orders for restaurants, cafes, and retail stores. Please contact us directly at hello@magnaecobites.com for custom pricing and availability.",
-  },
-];
+import SectionHeading from "./SectionHeading";
 
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  const toggle = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+  const [open, setOpen] = useState<number | null>(0);
+  const baseId = useId();
 
   return (
-    <section id="faq" aria-label="Frequently Asked Questions" className="relative overflow-hidden bg-gradient-to-b from-cream to-sand/30 py-12 md:py-16 lg:py-20">
-      {/* Decorative elements */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-20 top-1/3 h-64 w-64 -translate-y-1/2 rounded-full bg-leaf/5 blur-3xl" />
-        <div className="absolute -right-20 bottom-1/3 h-64 w-64 translate-y-1/2 rounded-full bg-clay/5 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        <Reveal>
-          <div className="mx-auto max-w-2xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-clay/30 bg-white/40 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-clay sm:text-xs">
-              <span className="h-2 w-2 rounded-full bg-clay" aria-hidden="true" />
-              FAQ
-            </span>
-            <h2 className="mt-6 font-display text-4xl font-medium leading-tight text-forest sm:mt-8 sm:text-5xl">
-              Common Questions
-            </h2>
-            <p className="mt-4 text-lg text-ink/70">
-              Quick answers about shopping, ingredients, storage, and orders.
-            </p>
-          </div>
-        </Reveal>
-
-        <div className="mt-10 space-y-3 sm:mt-12">
-          {faqs.map((faq, index) => (
-            <Reveal key={index} delay={index * 50}>
-              <div className="rounded-2xl border border-leaf/10 bg-white/60 shadow-soft">
-                <button
-                  onClick={() => toggle(index)}
-                  className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition-colors hover:bg-white/80 sm:px-8 sm:py-6"
-                  aria-expanded={openIndex === index}
-                >
-                  <span className="font-display text-lg font-medium text-forest sm:text-xl">
-                    {faq.question}
-                  </span>
-                  <svg
-                    className={`h-5 w-5 shrink-0 text-leaf transition-transform duration-300 ${
-                      openIndex === index ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                  </svg>
-                </button>
-                <div
-                  className={`overflow-hidden transition-all duration-300 ${
-                    openIndex === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                  }`}
-                >
-                  <div className="px-6 pb-5 pt-0 text-base leading-relaxed text-ink/70 sm:px-8 sm:pb-6">
-                    {faq.answer}
-                  </div>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-        <Reveal delay={400}>
-          <div className="mt-12 text-center sm:mt-16">
-            <p className="text-ink/60">
-              Have more questions?{" "}
-              <a href="/#contact" className="font-semibold text-leaf transition-colors hover:text-forest hover:underline">
+    <section id="faq" aria-labelledby="faq-title" className="relative bg-cream py-16 md:py-24">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:gap-14 lg:px-8">
+        <Reveal className="lg:col-span-5">
+          <SectionHeading
+            id="faq-title"
+            eyebrow="FAQ"
+            title={<>Questions, <span className="italic text-clay">answered</span></>}
+            lead="Ordering, sourcing, storage and delivery."
+          />
+          <div className="mt-8 rounded-[1.5rem] bg-sand/60 p-6">
+            <p className="font-display text-lg text-forest">Still curious?</p>
+            <p className="mt-1 text-sm leading-relaxed text-ink/65">Read our story or send us a note — we usually reply within a day.</p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link href="/about" className="focus-ring inline-flex items-center gap-2 rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-cream hover:bg-forest-deep">
+                About us <ArrowIcon width={15} height={15} />
+              </Link>
+              <a href="/#contact" className="focus-ring inline-flex items-center rounded-full border border-forest/15 px-5 py-2.5 text-sm font-semibold text-forest hover:border-forest">
                 Contact us
               </a>
-            </p>
+            </div>
           </div>
         </Reveal>
+
+        <div className="lg:col-span-7">
+          <ul className="divide-y divide-forest/10 rounded-[1.75rem] bg-white px-5 shadow-soft ring-1 ring-forest/[0.06] sm:px-7">
+            {faqs.map((f, i) => {
+              const isOpen = open === i;
+              const panel = `${baseId}-p${i}`;
+              return (
+                <li key={f.q}>
+                  <h3>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(isOpen ? null : i)}
+                      aria-expanded={isOpen}
+                      aria-controls={panel}
+                      className="focus-ring flex w-full items-center justify-between gap-4 rounded py-5 text-left"
+                    >
+                      <span className="font-display text-base text-forest sm:text-lg">{f.q}</span>
+                      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full transition-all duration-300 ${isOpen ? "rotate-180 bg-forest text-cream" : "bg-sand text-forest"}`}>
+                        <ChevronIcon width={16} height={16} />
+                      </span>
+                    </button>
+                  </h3>
+                  <div id={panel} role="region" className={`grid transition-all duration-300 ${isOpen ? "grid-rows-[1fr] pb-5 opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                    <p className="overflow-hidden pr-10 text-sm leading-relaxed text-ink/70 sm:text-[15px]">{f.a}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
     </section>
   );

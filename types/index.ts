@@ -13,8 +13,12 @@ export interface Product {
   priceInr: number | null;
   /** Path under /public. null renders an honest "photo coming soon" tile. */
   image: string | null;
+  /** All photos (first one = `image`). Optional for the bundled fallback catalogue. */
+  images?: string[];
   imageAlt: string;
   featured: boolean;
+  /** Units in stock. null when stock isn't tracked (static fallback catalogue). */
+  stock: number | null;
 }
 
 export interface CartItem {

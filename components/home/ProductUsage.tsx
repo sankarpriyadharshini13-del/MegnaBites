@@ -1,127 +1,161 @@
-import Link from "next/link";
-import Reveal from "./Reveal";
-import { featuredProducts } from "@/data/products";
+"use client";
 
-const usageExamples = [
-  {
-    dish: "Idli with Podi",
-    description: "Traditional steamed rice cakes served with our stone-ground idli podi. Mix with sesame oil or ghee for the authentic South Indian breakfast experience.",
-    servingTip: "Best with sesame oil or ghee",
-    productSlug: "idli-podi",
-    productName: "Idli Podi",
-    icon: "🥢",
-    color: "from-leaf to-forest",
-  },
-  {
-    dish: "Dosa with Chutney",
-    description: "Crispy dosa paired with our flavorful podi blends. The perfect combination for a hearty morning meal or evening snack.",
-    servingTip: "Perfect for breakfast or snacks",
-    productSlug: "moringa-idli-podi",
-    productName: "Moringa Idli Podi",
-    icon: "🫓",
-    color: "from-clay to-honey",
-  },
-  {
-    dish: "Sweet Treats",
-    description: "Use our country sugar in payasam, halwa, or your favorite traditional sweets. A natural, minimally processed sweetener that enhances every dish.",
-    servingTip: "Ideal for desserts & sweets",
-    productSlug: "country-sugar",
-    productName: "Country Sugar",
-    icon: "🍯",
-    color: "from-honey to-clay",
-  },
-];
+import Image from "next/image";
+import Link from "next/link";
+import { useId, useRef, useState } from "react";
+import { servingIdeas } from "@/data/brand";
+import { useProducts } from "@/context/ProductsContext";
+import AddToCartButton from "@/components/product/AddToCartButton";
+import { stockState } from "@/components/product/ProductCard";
+import Price from "@/components/ui/Price";
+import { ArrowIcon, LeafIcon } from "@/components/ui/Icons";
+import Reveal from "./Reveal";
+import SectionHeading from "./SectionHeading";
+
+const TONES = ["from-forest to-leaf", "from-clay to-honey", "from-honey to-clay"];
 
 export default function ProductUsage() {
+  const { getById } = useProducts();
+  const [index, setIndex] = useState(0);
+  const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const baseId = useId();
+
+  const idea = servingIdeas[index];
+  // Hidden or deleted products fall back to the shop instead of a broken link.
+  const product = getById(idea.productSlug);
+  const stock = product ? stockState(product) : null;
+  const href = product ? `/products/${product.slug}` : "/shop";
+
+  const select = (i: number, focus = false) => {
+    const next = (i + servingIdeas.length) % servingIdeas.length;
+    setIndex(next);
+    if (focus) tabsRef.current[next]?.focus();
+  };
+
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); select(index + 1, true); }
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); select(index - 1, true); }
+  };
+
   return (
-    <section id="usage" aria-label="Product Usage" className="relative overflow-hidden bg-gradient-to-b from-sand/50 to-cream py-12 md:py-16 lg:py-20">
-      {/* Decorative pattern */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, #d4a574 0.5px, transparent 0)`,
-          backgroundSize: '40px 40px'
-        }} />
-        <div className="absolute left-1/4 top-20 h-64 w-64 -translate-x-1/2 rounded-full bg-honey/10 blur-3xl" />
-        <div className="absolute right-1/4 bottom-20 h-64 w-64 translate-x-1/2 rounded-full bg-leaf/10 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section id="usage" aria-labelledby="usage-title" className="relative overflow-hidden bg-sand/45 py-16 md:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-honey/30 bg-white/40 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-clay sm:text-xs">
-              <span className="h-2 w-2 rounded-full bg-honey" aria-hidden="true" />
-              In Your Kitchen
-            </span>
-            <h2 className="mt-6 font-display text-4xl font-medium leading-tight text-forest sm:mt-8 sm:text-5xl">
-              How to enjoy our{" "}
-              <span className="relative inline-block italic text-clay">
-                products
-                <svg aria-hidden="true" viewBox="0 0 340 14" preserveAspectRatio="none" className="absolute -bottom-1 left-[5%] h-3 w-[90%]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                  <path d="M2 9C80 3 200 2 338 7" />
-                </svg>
-              </span>
-            </h2>
-            <p className="mt-4 text-lg text-ink/70">
-              Classic South Indian dishes made better with Magna Bites
+          <SectionHeading
+            id="usage-title"
+            eyebrow="In your kitchen"
+            title={<>How to enjoy <span className="italic text-clay">Magna Bites</span></>}
+            lead="Classic South Indian dishes, served the way we serve them at home. Pick a dish to see how."
+          />
+        </Reveal>
+
+        <div className="mt-10 grid grid-cols-1 gap-6 sm:mt-12 lg:grid-cols-12 lg:gap-8">
+          {/* Dish picker: chips on phones, a vertical list on large screens */}
+          <Reveal className="min-w-0 lg:col-span-4">
+            <div role="tablist" aria-label="Serving ideas" aria-orientation="vertical" onKeyDown={onKey} className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0">
+              {servingIdeas.map((s, i) => {
+                const on = i === index;
+                const p = getById(s.productSlug);
+                return (
+                  <button
+                    key={s.dish}
+                    ref={(el) => { tabsRef.current[i] = el; }}
+                    id={`${baseId}-tab-${i}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={on}
+                    aria-controls={`${baseId}-panel`}
+                    tabIndex={on ? 0 : -1}
+                    onClick={() => select(i)}
+                    className={`focus-ring group flex shrink-0 items-center gap-4 rounded-2xl border p-3 text-left transition-all lg:p-4 ${
+                      on ? "border-forest bg-forest text-cream shadow-lift" : "border-forest/10 bg-white/70 text-forest hover:border-forest/30 hover:bg-white"
+                    }`}
+                  >
+                    <span className={`relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br ${TONES[i % TONES.length]} lg:h-14 lg:w-14`}>
+                      {p?.image ? <Image src={p.image} alt="" fill sizes="56px" className="object-cover" /> : <LeafIcon width={20} height={20} className="text-cream" />}
+                    </span>
+                    <span className="min-w-0 pr-1">
+                      <span className={`block text-[10px] font-bold uppercase tracking-[0.16em] ${on ? "text-honey" : "text-clay"}`}>Idea 0{i + 1}</span>
+                      <span className="block whitespace-nowrap font-display text-base leading-snug lg:whitespace-normal lg:text-lg">{s.dish}</span>
+                      <span className={`hidden text-xs lg:block ${on ? "text-cream/60" : "text-ink/50"}`}>with {p?.name ?? s.productName}</span>
+                    </span>
+                    <ArrowIcon width={16} height={16} className={`ml-auto hidden shrink-0 transition-transform lg:block ${on ? "translate-x-0.5 text-honey" : "text-forest/30 group-hover:translate-x-0.5"}`} />
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-5 hidden text-sm leading-relaxed text-ink/60 lg:block">
+              Every podi is stone-ground in small batches in our Kolathur kitchen.{" "}
+              <Link href="/about" className="focus-ring rounded font-semibold text-forest underline-offset-4 hover:text-clay hover:underline">Learn more</Link>
             </p>
-          </div>
-        </Reveal>
+          </Reveal>
 
-        <div className="mt-10 grid gap-6 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3">
-          {usageExamples.map((example, index) => (
-            <Reveal key={index} delay={index * 100}>
-              <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-leaf/10 bg-white/60 shadow-soft transition-all duration-300 hover:-translate-y-2 hover:shadow-lift">
-                {/* Header with icon */}
-                <div className={`relative bg-gradient-to-br ${example.color} p-8 pb-16`}>
-                  <div className="absolute top-4 right-4 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-cream backdrop-blur-sm">
-                    Serving Idea
-                  </div>
-                  <div className="text-6xl transition-transform duration-300 group-hover:scale-110">{example.icon}</div>
-                </div>
-
-                {/* Content */}
-                <div className="flex flex-col flex-grow p-6 -mt-8">
-                  <div className="flex flex-col flex-grow rounded-2xl bg-white/90 p-6 shadow-sm">
-                    <h3 className="font-display text-2xl font-semibold text-forest">{example.dish}</h3>
-                    <p className="mt-3 text-sm leading-relaxed text-ink/70">
-                      {example.description}
-                    </p>
-                    <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-semibold text-leaf">
-                      <span className="text-lg flex-shrink-0">💡</span>
-                      <span>{example.servingTip}</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 pt-4 border-t border-leaf/10">
-                    <Link
-                      href={`/products/${example.productSlug}`}
-                      className="inline-flex items-center gap-2 font-semibold text-leaf transition-colors group-hover:text-forest"
-                    >
-                      Shop {example.productName}
-                      <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                      </svg>
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            </Reveal>
-          ))}
-        </div>
-
-        <Reveal delay={400}>
-          <div className="mt-10 text-center sm:mt-12">
-            <Link
-              href="/shop"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-forest bg-forest px-8 py-4 font-semibold text-cream transition-all duration-300 hover:bg-forest/90 hover:shadow-lg hover:scale-105"
+          {/* Selected dish */}
+          <Reveal delay={100} className="min-w-0 lg:col-span-8">
+            <div
+              id={`${baseId}-panel`}
+              role="tabpanel"
+              aria-labelledby={`${baseId}-tab-${index}`}
+              key={index}
+              className="grid animate-fade-in overflow-hidden rounded-[2rem] bg-white shadow-lift ring-1 ring-forest/[0.06] md:grid-cols-2"
             >
-              View All Products
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </Link>
-          </div>
-        </Reveal>
+              <div className={`relative min-h-[240px] bg-gradient-to-br ${TONES[index % TONES.length]} sm:min-h-[300px] md:min-h-full`}>
+                {product?.image ? (
+                  <Image src={product.image} alt={product.imageAlt} fill sizes="(min-width:1024px) 33vw, (min-width:768px) 50vw, 92vw" className="object-cover" />
+                ) : (
+                  <div className="grid h-full place-items-center text-cream/90"><LeafIcon width={52} height={52} /></div>
+                )}
+                <span className="absolute left-4 top-4 rounded-full bg-cream/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-forest shadow-soft">Serving idea</span>
+                <span className="absolute bottom-4 left-4 right-4 inline-flex items-center gap-2 self-start rounded-2xl bg-forest/90 px-4 py-2.5 text-xs font-semibold text-cream backdrop-blur sm:right-auto">
+                  <LeafIcon width={14} height={14} className="shrink-0 text-honey" /> {idea.tip}
+                </span>
+              </div>
+
+              <div className="flex flex-col p-6 sm:p-8">
+                <h3 className="font-display text-2xl leading-tight text-forest sm:text-3xl">{idea.dish}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-ink/65 sm:text-[15px]">{idea.summary}</p>
+
+                <ol className="relative mt-6 space-y-4">
+                  <span aria-hidden="true" className="absolute bottom-3 left-[13px] top-3 w-px bg-forest/10" />
+                  {idea.steps.map((step, i) => (
+                    <li key={i} className="relative flex gap-4 text-sm leading-relaxed text-ink/75">
+                      <span className="relative grid h-7 w-7 shrink-0 place-items-center rounded-full bg-forest text-xs font-bold text-cream ring-4 ring-white">{i + 1}</span>
+                      <span className="pt-0.5">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+
+                <div className="mt-7 rounded-2xl bg-cream p-4 ring-1 ring-forest/[0.06]">
+                  {product ? (
+                    <>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-clay">Made with</p>
+                          <p className="font-display text-lg leading-tight text-forest">{product.name}</p>
+                          <p className="text-xs text-ink/50">
+                            {product.packSize ?? "Pack size to be confirmed"}
+                            {stock && <span className={stock.tone === "out" ? " text-forest" : " text-clay"}> · {stock.label}</span>}
+                          </p>
+                        </div>
+                        <Price amount={product.priceInr} className={product.priceInr == null ? "!text-xs" : "shrink-0 !text-2xl"} />
+                      </div>
+                      <div className="mt-4 flex gap-2.5">
+                        <AddToCartButton productId={product.id} name={product.name} disabled={stock?.tone === "out"} compact className="!min-h-10 flex-1 !px-4 !text-sm !shadow-none hover:!translate-y-0" />
+                        <Link href={href} className="focus-ring inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-forest/15 bg-white px-3 text-sm font-semibold text-forest transition-colors hover:border-forest">
+                          View details <ArrowIcon width={14} height={14} />
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <Link href="/shop" className="focus-ring inline-flex items-center gap-2 rounded font-semibold text-forest hover:text-clay">
+                      Browse the shop <ArrowIcon width={16} height={16} />
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   );

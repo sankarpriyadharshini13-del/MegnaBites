@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react";
-import { getProductById } from "@/data/products";
+import { useProducts } from "./ProductsContext";
 import { loadCart, saveCart } from "@/services/cartStorage";
 import type { CartItem, Product } from "@/types";
 
@@ -17,7 +17,7 @@ type Action =
 function reducer(state: CartItem[], a: Action): CartItem[] {
   switch (a.type) {
     case "hydrate":
-      return a.items.filter((i) => getProductById(i.productId)).map((i) => ({ ...i, quantity: Math.min(i.quantity, MAX_QTY) }));
+      return a.items.map((i) => ({ ...i, quantity: Math.min(i.quantity, MAX_QTY) }));
     case "add": {
       const existing = state.find((i) => i.productId === a.productId);
       if (existing)
@@ -68,6 +68,7 @@ export function CartProvider({ children, onAdd }: { children: React.ReactNode; o
   const [announcement, setAnnouncement] = useState("");
   const onAddRef = useRef(onAdd);
   onAddRef.current = onAdd;
+  const { getById } = useProducts();
 
   useEffect(() => {
     dispatch({ type: "hydrate", items: loadCart() });
@@ -87,23 +88,27 @@ export function CartProvider({ children, onAdd }: { children: React.ReactNode; o
   }, []);
 
   const add = useCallback((productId: string, quantity = 1) => {
-    const p = getProductById(productId);
+    const p = getById(productId);
     if (!p) return;
+    if (p.stock != null && p.stock <= 0) {
+      setAnnouncement(`${p.name} is out of stock`);
+      return;
+    }
     dispatch({ type: "add", productId, quantity });
     setAnnouncement(`${p.name} added to cart`);
     onAddRef.current?.();
-  }, []);
+  }, [getById]);
   const setQuantity = useCallback((productId: string, quantity: number) => dispatch({ type: "set", productId, quantity }), []);
   const remove = useCallback((productId: string) => {
-    const p = getProductById(productId);
+    const p = getById(productId);
     dispatch({ type: "remove", productId });
     if (p) setAnnouncement(`${p.name} removed from cart`);
-  }, []);
+  }, [getById]);
   const clear = useCallback(() => dispatch({ type: "clear" }), []);
 
   const value = useMemo<CartValue>(() => {
     const lines: CartLine[] = items.flatMap((i) => {
-      const product = getProductById(i.productId);
+      const product = getById(i.productId);
       return product
         ? [{ product, quantity: i.quantity, lineTotal: product.priceInr != null ? product.priceInr * i.quantity : null }]
         : [];
@@ -121,7 +126,7 @@ export function CartProvider({ children, onAdd }: { children: React.ReactNode; o
       clear,
       maxQty: MAX_QTY,
     };
-  }, [items, hydrated, announcement, add, setQuantity, remove, clear]);
+  }, [items, hydrated, announcement, add, setQuantity, remove, clear, getById]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { products } from "@/data/products";
+import { useProducts } from "@/context/ProductsContext";
 
 export function useProductSearch(query: string) {
+  const { products } = useProducts();
   return useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return products;
@@ -10,5 +11,5 @@ export function useProductSearch(query: string) {
       const hay = `${p.name} ${p.description} ${p.tag ?? ""}`.toLowerCase();
       return terms.every((t) => hay.includes(t));
     });
-  }, [query]);
+  }, [query, products]);
 }

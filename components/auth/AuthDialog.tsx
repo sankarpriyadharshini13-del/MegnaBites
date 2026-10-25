@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Dialog from "@/components/ui/Dialog";
 import PasswordField from "./PasswordField";
 import { useUI } from "@/context/UIContext";
 import { useAuth } from "@/context/AuthContext";
+import { checkAdmin } from "@/services/adminAccess";
 
 type Mode = "signin" | "signup" | "forgot";
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export default function AuthDialog() {
-  const { panel, close } = useUI();
-  const { user, configured, signIn, signUp, signOut, sendPasswordReset } = useAuth();
+  const { panel, close, open: openPanel } = useUI();
+  const router = useRouter();
+  const { user, ready, isAdmin, configured, signIn, signUp, signOut, sendPasswordReset } = useAuth();
   const [mode, setMode] = useState<Mode>("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -22,6 +25,18 @@ export default function AuthDialog() {
   const [busy, setBusy] = useState(false);
   const firstField = useRef<HTMLInputElement>(null);
   const open = panel === "account";
+
+  // /?signin=1 (used when someone opens a protected page such as /admin while signed out).
+  useEffect(() => {
+    if (!ready) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("signin") === "1") {
+      if (!user) openPanel("account");
+      params.delete("signin");
+      const qs = params.toString();
+      window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
+    }
+  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset transient state each time the dialog opens or the mode changes.
   useEffect(() => { if (open) { setError(""); setNotice(""); } }, [open]);
@@ -42,6 +57,8 @@ export default function AuthDialog() {
         const r = await signIn(email, password);
         if (r.error) return setError(r.error);
         close();
+        // The server decides who is an admin; admins go straight to the admin panel.
+        if (await checkAdmin()) router.push("/admin");
       } else if (mode === "signup") {
         const r = await signUp(name, email, password);
         if (r.error) return setError(r.error);
@@ -66,7 +83,8 @@ export default function AuthDialog() {
           <p className="font-display text-2xl text-forest">Hello, {user.name.split(" ")[0]}.</p>
           <p className="mt-1 break-all text-sm text-ink/65">{user.email}</p>
           <div className="mt-6 grid gap-3">
-            <Link href="/account" onClick={close} className="btn-primary w-full">Manage account</Link>
+            {isAdmin && <Link href="/admin" onClick={close} className="btn-primary w-full">Open admin panel</Link>}
+            <Link href="/account" onClick={close} className={isAdmin ? "btn-secondary w-full" : "btn-primary w-full"}>Manage account</Link>
             <button type="button" className="btn-secondary w-full" onClick={async () => { await signOut(); close(); }}>Sign out</button>
           </div>
         </div>

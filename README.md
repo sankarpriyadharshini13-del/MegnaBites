@@ -167,3 +167,55 @@ For Vercel:
 ## License
 
 © 2026 Magna Eco Bites. All rights reserved.
+
+## Admin console (`/admin`)
+
+Seven screens — Dashboard, Orders, Products & Stock, Barcodes & Labels, Customers, Payments & Refunds,
+Settings — all read from and write to Supabase through the server routes in `app/api/admin/*`.
+The storefront's **Our Shop**, `/shop` and product pages read the same `products` table, so anything saved
+in Products & Stock appears on the site (hidden products disappear from it).
+
+### One-time setup
+
+1. **Database** — Supabase → SQL Editor → run, in order:
+   `supabase/migrations/20261020000000_profiles.sql` then `supabase/migrations/20261025000000_admin_catalog.sql`.
+   This creates the tables, row-level-security policies, invitation functions, the `admin-assets`
+   storage bucket and the three existing products.
+2. **Owner account** — copy the `service_role` key (Project Settings → API) and run (PowerShell):
+
+   ```powershell
+   $env:SUPABASE_SERVICE_ROLE_KEY="<service_role key>"
+   $env:ADMIN_EMAIL="<owner email>"; $env:ADMIN_PASSWORD="<owner password>"; $env:ADMIN_NAME="Magesh"
+   node --env-file=.env scripts/create-admin.mjs
+   ```
+
+   The password is stored by Supabase Auth as a bcrypt hash; nothing is written to the repo.
+   Never put the service-role key in a `NEXT_PUBLIC_` variable. Use the real values — not the `<...>` placeholders.
+   To **change the owner's email later**, run the same command with the new `ADMIN_EMAIL` and `$env:ALLOW_OWNER_EMAIL_CHANGE="1"`.
+3. Restart `npm run dev` (the image domain in `next.config.js` is read at start-up).
+
+### How access works
+
+- Sign in from the site's login dialog. The server checks the session and `public.admin_members`;
+  admins are sent straight to `/admin`. Anyone else who opens `/admin` is sent to sign in or shown
+  "No admin access", and every admin API returns 401/403 for them. RLS enforces the same rules in the
+  database itself.
+- **Invitations** (Settings → Team & access, owner only) create a single-use link valid for 7 days.
+  Only a SHA-256 hash of the token is stored. The link works only for an account signed in with the
+  invited, confirmed email; accepting it grants admin access. The owner can revoke invites, create a
+  **New link** for a pending invite, and remove admins. No email is sent — copy the link and send it yourself.
+- Set `NEXT_PUBLIC_SITE_URL=https://your-domain` in the environment so invitation links point at the live
+  site instead of `localhost`. In Supabase → Authentication → URL Configuration, add your site (and
+  `http://localhost:3000/**` for development) to **Redirect URLs** so confirmation emails can return
+  new invitees to the invite page.
+- **Customers** lists every site account (synced from sign-ups by the database) plus anyone who ordered.
+
+### Notes
+
+- Product photos are compressed in the browser, validated on the server (JPG/PNG/WebP, ≤ 1.5 MB) and
+  stored in Supabase Storage.
+- If the database can't be reached, the storefront falls back to `data/products.ts` so it never goes blank.
+- Razorpay is **not** called: refunds are recorded in the database only. Orders are not created by the
+  website yet (checkout still opens an email), so Orders/Customers/Payments stay empty until an order
+  source is connected.
+- `scripts/` and the SQL migration are the only places that touch the service role or schema.

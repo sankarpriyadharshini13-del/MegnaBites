@@ -1,7 +1,6 @@
 import { site } from "@/data/site";
-import { getProductById } from "@/data/products";
 import { formatInr } from "@/lib/format";
-import type { CartItem, UserProfile } from "@/types";
+import type { CartItem, Product, UserProfile } from "@/types";
 
 /**
  * CHECKOUT SERVICE — integration point.
@@ -9,9 +8,9 @@ import type { CartItem, UserProfile } from "@/types";
  * (Razorpay/Stripe + order API), "checkout" opens a pre-filled order enquiry
  * email to the shop so no order is lost. Replace `startCheckout` to integrate.
  */
-export function buildOrderMailto(items: CartItem[], user: UserProfile | null) {
+export function buildOrderMailto(items: CartItem[], user: UserProfile | null, lookup: (id: string) => Product | undefined) {
   const lines = items.map((i) => {
-    const p = getProductById(i.productId);
+    const p = lookup(i.productId);
     if (!p) return "";
     const price = p.priceInr != null ? ` — ${formatInr(p.priceInr * i.quantity)}` : "";
     const size = p.packSize ? ` (${p.packSize})` : "";
@@ -27,6 +26,6 @@ export function buildOrderMailto(items: CartItem[], user: UserProfile | null) {
   return `mailto:${site.email}?subject=${encodeURIComponent("Order enquiry")}&body=${encodeURIComponent(body)}`;
 }
 
-export function startCheckout(items: CartItem[], user: UserProfile | null) {
-  window.location.href = buildOrderMailto(items, user);
+export function startCheckout(items: CartItem[], user: UserProfile | null, lookup: (id: string) => Product | undefined) {
+  window.location.href = buildOrderMailto(items, user, lookup);
 }

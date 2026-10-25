@@ -8,6 +8,19 @@ import type { UserProfile } from "@/types";
  * `{ error }` with a human-readable message instead of throwing.
  */
 
+/** Set by the /invite page so a new account returns there after confirming its email. */
+export const PENDING_INVITE_KEY = "magna-pending-invite";
+
+function confirmRedirect() {
+  try {
+    const token = window.localStorage.getItem(PENDING_INVITE_KEY);
+    if (token) return `${window.location.origin}/invite?token=${encodeURIComponent(token)}`;
+  } catch {
+    /* storage unavailable */
+  }
+  return `${window.location.origin}/account`;
+}
+
 export const NOT_CONFIGURED = "Login isn't set up yet. Add the Supabase keys to .env.local (see README).";
 
 export interface Result<T = void> {
@@ -70,7 +83,7 @@ export async function signUp(name: string, email: string, password: string): Pro
     password,
     options: {
       data: { full_name: name.trim() },
-      emailRedirectTo: `${window.location.origin}/account`,
+      emailRedirectTo: confirmRedirect(),
     },
   });
   if (error) return { error: friendly(error.message) };

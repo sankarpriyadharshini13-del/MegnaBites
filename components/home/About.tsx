@@ -67,7 +67,6 @@ export default function About({ aboutLink = true }: { aboutLink?: boolean }) {
                     <div className="min-w-0">
                       <h4 className="font-display text-lg leading-tight text-forest">{m.name}</h4>
                       <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.14em] text-clay">{m.role}</p>
-                      <p className="mt-2 text-sm leading-relaxed text-ink/65">{m.focus}</p>
                     </div>
                   </article>
                 </Reveal>

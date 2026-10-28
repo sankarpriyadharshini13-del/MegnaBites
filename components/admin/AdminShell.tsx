@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DOC_CSS } from "@/lib/admin/print";
 import { attentionCount } from "@/lib/admin/logic";
@@ -41,9 +41,21 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
  */
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { status, errorMessage, retry, data, toasts, dismissToast } = useAdmin();
   const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  /** Sidebar "Sign out": end the session, then leave the admin area for the home page. */
+  const signOutToHome = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      router.replace("/");
+    }
+  };
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -56,6 +68,15 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       ))}
     </div>
   );
+
+  // Shown while signing out so the admin sign-in screen doesn't flash before the redirect.
+  if (signingOut) {
+    return (
+      <div className="adm">
+        <div className="adm-loading">Signing out…</div>
+      </div>
+    );
+  }
 
   if (status !== "ready" || !data) {
     return (
@@ -121,7 +142,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis" }}>{data.me.email}</span>
             <button
               type="button"
-              onClick={() => signOut()}
+              onClick={signOutToHome}
               style={{ marginTop: 8, border: "1px solid rgba(255,255,255,.2)", background: "transparent", color: "#fff", borderRadius: 8, padding: "5px 10px", fontSize: 12, fontWeight: 600 }}
             >
               Sign out

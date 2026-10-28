@@ -13,7 +13,8 @@ export type Tone = "green" | "yellow" | "blue" | "orange" | "red" | "gray";
 export function orderTone(s: OrderStatus): Tone {
   switch (s) {
     case "New": return "yellow";
-    case "Packed": return "green";
+    case "Packed": return "blue";
+    case "Delivered": return "green";
     default: return "gray";
   }
 }

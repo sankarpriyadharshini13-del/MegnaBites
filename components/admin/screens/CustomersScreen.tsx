@@ -18,11 +18,13 @@ export default function CustomersScreen() {
   const [noteOpen, setNoteOpen] = useState(false);
 
   const stats = useMemo(() => customerStats(data), [data]);
+  // Registered customers only: the owner, invited admins and invitees are excluded.
+  const shoppers = useMemo(() => data.customers.filter((c) => !c.team), [data.customers]);
 
   const sorted = useMemo(
     () =>
-      [...data.customers].sort((a, b) => (stats.get(b.id)?.last ?? "").localeCompare(stats.get(a.id)?.last ?? "")),
-    [data.customers, stats],
+      [...shoppers].sort((a, b) => (stats.get(b.id)?.last ?? "").localeCompare(stats.get(a.id)?.last ?? "")),
+    [shoppers, stats],
   );
 
   const list = useMemo(() => {
@@ -38,7 +40,7 @@ export default function CustomersScreen() {
     );
   }, [sorted, query]);
 
-  const active = data.customers.find((c) => c.id === selectedId) ?? list[0] ?? null;
+  const active = shoppers.find((c) => c.id === selectedId) ?? list[0] ?? null;
   const st = active ? stats.get(active.id) : undefined;
   const history = active ? data.orders.filter((o) => o.customerId === active.id) : [];
 
@@ -49,16 +51,16 @@ export default function CustomersScreen() {
   }, [history]);
 
   /* summary cards */
-  const total = data.customers.length;
-  const repeat = data.customers.filter((c) => (stats.get(c.id)?.orders ?? 0) >= 2).length;
-  const totalSpent = [...stats.values()].reduce((s, x) => s + x.spent, 0);
-  const totalOrders = [...stats.values()].reduce((s, x) => s + x.orders, 0);
-  const newThisMonth = data.customers.filter((c) => {
+  const total = shoppers.length;
+  const repeat = shoppers.filter((c) => (stats.get(c.id)?.orders ?? 0) >= 2).length;
+  const totalSpent = shoppers.reduce((s, c) => s + (stats.get(c.id)?.spent ?? 0), 0);
+  const totalOrders = shoppers.reduce((s, c) => s + (stats.get(c.id)?.orders ?? 0), 0);
+  const newThisMonth = shoppers.filter((c) => {
     const d = new Date(c.since);
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }).length;
   const cityCount = new Map<string, number>();
-  for (const c of data.customers) if (c.city) cityCount.set(c.city, (cityCount.get(c.city) ?? 0) + 1);
+  for (const c of shoppers) if (c.city) cityCount.set(c.city, (cityCount.get(c.city) ?? 0) + 1);
   const topCity = [...cityCount.entries()].sort((a, b) => b[1] - a[1])[0];
 
   const exportCsv = () =>

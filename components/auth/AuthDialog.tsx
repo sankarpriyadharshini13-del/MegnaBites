@@ -84,7 +84,9 @@ export default function AuthDialog() {
           <p className="mt-1 break-all text-sm text-ink/65">{user.email}</p>
           <div className="mt-6 grid gap-3">
             {isAdmin && <Link href="/admin" onClick={close} className="btn-primary w-full">Open admin panel</Link>}
-            <Link href="/account" onClick={close} className={isAdmin ? "btn-secondary w-full" : "btn-primary w-full"}>Manage account</Link>
+            {/* My orders is for customers; admins manage every order in the admin panel. */}
+            {!isAdmin && <Link href="/orders" onClick={close} className="btn-primary w-full">My orders</Link>}
+            <Link href="/account" onClick={close} className="btn-secondary w-full">Manage account</Link>
             <button type="button" className="btn-secondary w-full" onClick={async () => { await signOut(); close(); }}>Sign out</button>
           </div>
         </div>

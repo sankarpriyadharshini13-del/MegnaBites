@@ -89,7 +89,7 @@ export default function SettingsScreen() {
           <div className="adm-card-h"><h2>Notifications</h2></div>
           <ToggleRow label="Email me on every new order" checked={n.newOrder} onChange={(v) => upd("notifications", { newOrder: v })} />
           <ToggleRow label="Low-stock alerts (≤ 10 units)" checked={n.lowStock} onChange={(v) => upd("notifications", { lowStock: v })} />
-          <ToggleRow label="Order confirmation email to customer" checked={n.orderEmail} onChange={(v) => upd("notifications", { orderEmail: v })} />
+          <ToggleRow label="Order confirmation & delivery emails to customer" checked={n.orderEmail} onChange={(v) => upd("notifications", { orderEmail: v })} />
           <ToggleRow label="WhatsApp updates to customer" checked={n.whatsapp} onChange={(v) => upd("notifications", { whatsapp: v })} />
         </section>
 

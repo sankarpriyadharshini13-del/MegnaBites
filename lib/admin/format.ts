@@ -55,7 +55,9 @@ export function orderLabel(num: number, format: string) {
   return `${prefix}${String(num).padStart(width, "0")}`;
 }
 
-export const maskPaymentId = (id: string) => `pay_${id.slice(4, 8)}•••${id.slice(-2)}`;
+export const isTestPayment = (id: string) => id.startsWith("dummy_");
+
+export const maskPaymentId = (id: string) => (isTestPayment(id) ? "Test payment" : `pay_${id.slice(4, 8)}•••${id.slice(-2)}`);
 
 export const groupBarcode = (code: string) => code.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
 

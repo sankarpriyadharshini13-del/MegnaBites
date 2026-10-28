@@ -109,11 +109,11 @@ export const servingIdeas: ServingIdea[] = [
 export const faqs = [
   {
     q: "How do I place an order?",
-    a: "Add products to your cart and choose “Place order by email”. This opens a pre-filled email to us — we reply to confirm availability, the total and payment details.",
+    a: "Add products to your cart, choose “Place order”, sign in, enter your delivery location and pay securely. You get an order confirmation email straight away and another when your order is delivered.",
   },
   {
     q: "What payment methods do you accept?",
-    a: "Online payment is coming soon. For now we share payment options when we confirm your order by email.",
+    a: "Pay online at checkout by UPI, credit/debit card or netbanking. You can also choose to order by email from your cart.",
   },
   {
     q: "How are your products sourced?",

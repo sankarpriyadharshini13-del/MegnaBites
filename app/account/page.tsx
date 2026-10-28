@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import SiteShell from "@/components/layout/SiteShell";
 import { useAuth } from "@/context/AuthContext";
@@ -56,12 +57,22 @@ function AccountContent() {
   );
 }
 
+/** Customers get a shortcut to their orders; admins don't place orders, so it's hidden for them. */
+function OrdersLink() {
+  const { user, isAdmin } = useAuth();
+  if (!user || isAdmin) return null;
+  return <Link href="/orders" className="btn-secondary text-sm">View my orders</Link>;
+}
+
 export default function AccountPage() {
   return (
     <SiteShell>
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 md:py-20 lg:px-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-clay sm:text-xs">Account</p>
-        <h1 className="mb-8 mt-2 font-display text-3xl text-forest sm:mb-10 sm:mt-3 sm:text-4xl md:text-5xl">Your <span className="italic text-clay">details</span></h1>
+        <div className="mb-8 mt-2 flex flex-wrap items-end justify-between gap-4 sm:mb-10 sm:mt-3">
+          <h1 className="font-display text-3xl text-forest sm:text-4xl md:text-5xl">Your <span className="italic text-clay">details</span></h1>
+          <OrdersLink />
+        </div>
         <AccountContent />
       </section>
     </SiteShell>

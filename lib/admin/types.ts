@@ -1,6 +1,6 @@
-export type OrderStatus = "New" | "Packed" | "Cancelled";
+export type OrderStatus = "New" | "Packed" | "Delivered" | "Cancelled";
 
-export type PayMethod = "UPI" | "Card" | "NetBanking";
+export type PayMethod = "UPI" | "Card" | "NetBanking" | "Wallet" | "Other";
 
 export type PaymentStatus = "pending" | "captured" | "refunded" | "partial_refund";
 
@@ -55,6 +55,12 @@ export interface Order {
   address: string;
   timeline: TimelineEvent[];
   payment: OrderPayment;
+  /** Contact + delivery details captured at checkout (empty for older orders). */
+  email: string;
+  shipName: string;
+  shipPhone: string;
+  location: { city: string; state: string; pincode: string };
+  deliveredAt: string | null;
 }
 
 export interface Refund {
@@ -82,6 +88,8 @@ export interface Customer {
   state: string;
   since: string;
   notes: CustomerNote[];
+  /** True for the owner, invited admins and invitees — hidden from the Customers tab. */
+  team?: boolean;
 }
 
 export interface StockLogEntry {
@@ -148,7 +156,19 @@ export interface Settings {
   };
 }
 
+export interface Review {
+  id: string;
+  orderNumber: number;
+  customerName: string;
+  rating: number;
+  message: string;
+  createdAt: string;
+  /** "Idli Podi ×2, Country Sugar ×1" */
+  products: string;
+}
+
 export interface AdminData {
+  reviews: Review[];
   me: Me;
   members: Member[];
   invites: Invite[];

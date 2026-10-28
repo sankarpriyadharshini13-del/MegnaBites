@@ -12,7 +12,7 @@ export class HttpError extends Error {
 }
 
 export const SCHEMA_MISSING =
-  "The database isn't set up yet. Run supabase/migrations/20261025000000_admin_catalog.sql in the Supabase SQL editor.";
+  "The database is missing a setup step. Run the SQL files in supabase/migrations (in date order) in the Supabase SQL editor.";
 
 interface DbErrorLike {
   code?: string;
@@ -23,7 +23,7 @@ interface DbErrorLike {
 /** Translate a PostgREST / Postgres error into an HttpError without leaking internals. */
 export function dbError(e: DbErrorLike | null | undefined, fallback = "Database error"): HttpError {
   const code = e?.code ?? "";
-  if (code === "PGRST205" || code === "42P01" || code === "PGRST202" || code === "42883") {
+  if (code === "PGRST205" || code === "42P01" || code === "PGRST202" || code === "42883" || code === "42703" || code === "PGRST204") {
     return new HttpError(503, SCHEMA_MISSING, "schema_missing");
   }
   if (code === "42501") return new HttpError(403, "You don't have permission to do that.");

@@ -93,11 +93,26 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     [dismissToast],
   );
 
-  const load = useCallback(async () => {
+  const lastOrder = useRef<number | null>(null);
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+
+  const load = useCallback(async (background = false) => {
     const res = await call<AdminData>("/api/admin/data");
     if (res.ok && res.data) {
+      // Announce orders that arrived since the last refresh (e.g. a customer just paid).
+      const newest = res.data.orders.reduce((m, o) => Math.max(m, o.number), 0);
+      if (lastOrder.current !== null && newest > lastOrder.current) {
+        const fresh = res.data.orders.filter((o) => o.number > (lastOrder.current ?? 0)).length;
+        const fmt = res.data.settings.invoice.numberFormat;
+        toastRef.current?.(fresh === 1 ? `New order #${orderLabel(newest, fmt)} received.` : `${fresh} new orders received.`);
+      }
+      lastOrder.current = newest;
       setData(res.data);
       setStatus("ready");
+    } else if (background && res.status !== 401 && res.status !== 403) {
+      // A failed background refresh keeps showing the last good data.
+      return;
     } else if (res.status === 401) {
       setData(null);
       setStatus("signed-out");
@@ -126,6 +141,18 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const tick = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(tick);
   }, []);
+
+  // Keep orders, stock and customers live: refresh every 30 s while the tab is visible, and on focus.
+  useEffect(() => {
+    if (status !== "ready") return;
+    const refreshIfVisible = () => document.visibilityState === "visible" && load(true);
+    const timer = setInterval(refreshIfVisible, 30_000);
+    window.addEventListener("focus", refreshIfVisible);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", refreshIfVisible);
+    };
+  }, [status, load]);
 
   const api = useCallback<AdminContextValue["api"]>(async (path, init) => {
     const res = await call(path, init);
@@ -184,7 +211,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       toast,
       toasts,
       dismissToast,
-      refresh: load,
+      refresh: () => load(),
       api,
       mutate,
       uploadImage,

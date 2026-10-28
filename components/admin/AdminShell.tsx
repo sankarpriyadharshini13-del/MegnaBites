@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DOC_CSS } from "@/lib/admin/print";
 import { attentionCount } from "@/lib/admin/logic";
 import { useAdmin } from "@/lib/admin/store";
+import { useAuth } from "@/context/AuthContext";
+import AdminLogin from "./AdminLogin";
 
 const NAV: { group?: string; items: { href: string; label: string }[] }[] = [
   {
@@ -15,6 +17,7 @@ const NAV: { group?: string; items: { href: string; label: string }[] }[] = [
       { href: "/admin/products", label: "Products & Stock" },
       { href: "/admin/barcodes", label: "Barcodes & Labels" },
       { href: "/admin/customers", label: "Customers" },
+      { href: "/admin/reviews", label: "Reviews" },
     ],
   },
   { group: "INSIGHTS", items: [{ href: "/admin/payments", label: "Payments & Refunds" }] },
@@ -38,14 +41,11 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
  */
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { status, errorMessage, retry, data, toasts, dismissToast } = useAdmin();
+  const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
 
   useEffect(() => setOpen(false), [pathname]);
-  useEffect(() => {
-    if (status === "signed-out") router.replace("/?signin=1");
-  }, [status, router]);
 
   const toastLayer = (
     <div className="adm-toasts" role="status" aria-live="polite">
@@ -61,10 +61,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     return (
       <div className="adm">
         {status === "loading" && <div className="adm-loading">Loading…</div>}
-        {status === "signed-out" && <div className="adm-loading">Redirecting to sign in…</div>}
+        {status === "signed-out" && <AdminLogin />}
         {status === "forbidden" && (
           <Notice title="No admin access">
-            This account isn&apos;t authorised to use the admin panel. <Link href="/" style={{ color: "var(--clay)", fontWeight: 600 }}>Back to the shop</Link>
+            <p>{user?.email ? <>You&apos;re signed in as <b>{user.email}</b>, which isn&apos;t an admin account.</> : "This account isn't authorised to use the admin panel."}</p>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 14, flexWrap: "wrap" }}>
+              <button type="button" className="adm-btn pri" onClick={() => signOut()}>Sign in with another account</button>
+              <Link href="/" className="adm-btn">Back to the shop</Link>
+            </div>
           </Notice>
         )}
         {status === "error" && (
@@ -111,6 +115,19 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </div>
           ))}
         </nav>
+        <div className="adm-sb-foot">
+          <div className="adm-sb-card">
+            <b>{data.me.name || data.me.email.split("@")[0]}</b>
+            <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis" }}>{data.me.email}</span>
+            <button
+              type="button"
+              onClick={() => signOut()}
+              style={{ marginTop: 8, border: "1px solid rgba(255,255,255,.2)", background: "transparent", color: "#fff", borderRadius: 8, padding: "5px 10px", fontSize: 12, fontWeight: 600 }}
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
       </aside>
 
       <main className="adm-main">

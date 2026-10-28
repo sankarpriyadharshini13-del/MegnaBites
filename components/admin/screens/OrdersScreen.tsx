@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { downloadCsv, fmtDateTime, maskEmail, maskPhone } from "@/lib/admin/format";
+import { downloadCsv, fmtDateTime, isTestPayment, maskEmail, maskPhone } from "@/lib/admin/format";
 import { customerSub, orderTone, orderTotal, orderUnits } from "@/lib/admin/logic";
 import { printInvoices } from "@/lib/admin/print";
 import { useAdminData } from "@/lib/admin/store";
@@ -12,8 +12,8 @@ import { Badge, Topbar, useQueryParam } from "../ui";
 
 const PAGE = 9;
 
-type Filter = "All" | "New" | "Packed";
-const FILTERS: Filter[] = ["All", "New", "Packed"];
+type Filter = "All" | "New" | "Packed" | "Delivered";
+const FILTERS: Filter[] = ["All", "New", "Packed", "Delivered"];
 
 const matchesFilter = (o: Order, f: Filter) => (f === "All" ? true : o.status === f);
 
@@ -22,7 +22,7 @@ function Timeline({ order, future }: { order: Order; future?: { label: string; n
   return (
     <ol className="adm-tl">
       {order.timeline.map((e, i) => (
-        <li key={i} className={i === lastIdx && order.status === "New" ? "cur" : ""}>
+        <li key={i} className={i === lastIdx && (order.status === "New" || order.status === "Packed") ? "cur" : ""}>
           <i />
           <b>{e.label}</b>
           <span>{fmtDateTime(e.at)}{e.note ? ` · ${e.note}` : ""}</span>
@@ -46,6 +46,12 @@ export default function OrdersScreen() {
   const pack = (numbers: number[]) =>
     mutate<{ packed: number; skipped: number }>("/api/admin/orders/pack", "POST", { numbers }, (r) =>
       r.packed ? `${r.packed} order${r.packed > 1 ? "s" : ""} marked packed.${r.skipped ? ` ${r.skipped} skipped.` : ""}` : "Nothing to pack — those orders are already packed.",
+    );
+  const deliver = (numbers: number[]) =>
+    mutate<{ delivered: number; skipped: number }>("/api/admin/orders/deliver", "POST", { numbers }, (r) =>
+      r.delivered
+        ? `${r.delivered} order${r.delivered > 1 ? "s" : ""} marked delivered — confirmation emailed.${r.skipped ? ` ${r.skipped} skipped (not packed yet).` : ""}`
+        : "Only packed orders can be marked delivered.",
     );
   const qParam = useQueryParam("q");
   const orderParam = useQueryParam("order");
@@ -89,7 +95,11 @@ export default function OrdersScreen() {
         (/\d/.test(q) && String(o.number).includes(q.replace(/^#?meb-?/, ""))) ||
         (c?.name.toLowerCase().includes(q) ?? false) ||
         (c?.city.toLowerCase().includes(q) ?? false) ||
-        (c?.area?.toLowerCase().includes(q) ?? false)
+        (c?.area?.toLowerCase().includes(q) ?? false) ||
+        o.location.city.toLowerCase().includes(q) ||
+        o.location.pincode.includes(q) ||
+        o.shipName.toLowerCase().includes(q) ||
+        o.email.toLowerCase().includes(q)
       );
     });
   }, [data.orders, filter, query, customers, label]);
@@ -115,14 +125,28 @@ export default function OrdersScreen() {
 
   const exportCsv = () =>
     downloadCsv("orders.csv", [
-      ["Order", "Placed", "Customer", "City", "Units", "Amount (INR)", "Payment", "Status"],
+      ["Order", "Placed", "Customer", "Email", "Phone", "City", "State", "PIN", "Address", "Units", "Amount (INR)", "Payment", "Status"],
       ...filtered.map((o) => {
         const c = customers.get(o.customerId);
-        return [label(o.number), fmtDateTime(o.placedAt), c?.name ?? "", c?.city ?? "", orderUnits(o), orderTotal(o), o.method, o.status];
+        return [
+          label(o.number), fmtDateTime(o.placedAt), o.shipName || c?.name || "", o.email || c?.email || "", o.shipPhone || c?.phone || "",
+          o.location.city || c?.city || "", o.location.state || c?.state || "", o.location.pincode, o.address,
+          orderUnits(o), orderTotal(o), o.method, o.status,
+        ];
       }),
     ]);
 
-  const future = (o: Order) => (o.status === "New" ? [{ label: "Packed", note: "Pending" }] : undefined);
+  const future = (o: Order) =>
+    o.status === "New"
+      ? [{ label: "Packed", note: "Pending" }, { label: "Delivered", note: "Pending" }]
+      : o.status === "Packed"
+        ? [{ label: "Delivered", note: "Pending — customer is emailed when marked" }]
+        : undefined;
+  const locationOf = (o: Order) => {
+    if (o.location.city) return { main: o.location.city, sub: [o.location.state, o.location.pincode].filter(Boolean).join(" · ") };
+    const c = customers.get(o.customerId);
+    return c?.city ? { main: c.city, sub: c.state } : null;
+  };
 
   return (
     <>
@@ -160,7 +184,7 @@ export default function OrdersScreen() {
                       onChange={(e) => setSelected(e.target.checked ? Array.from(new Set([...selected, ...rows.map((o) => o.number)])) : selected.filter((n) => !rows.some((o) => o.number === n)))}
                     />
                   </th>
-                  <th>Order</th><th>Placed</th><th>Customer</th><th>Items</th><th>Amount</th><th>Payment</th><th>Status</th>
+                  <th>Order</th><th>Placed</th><th>Customer</th><th>Customer location</th><th>Items</th><th>Amount</th><th>Payment</th><th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -174,6 +198,12 @@ export default function OrdersScreen() {
                       <td className="b">#{label(o.number)}</td>
                       <td style={{ color: "#4a4f46" }}>{fmtDateTime(o.placedAt)}</td>
                       <td style={{ lineHeight: 1.25 }}><b style={{ fontWeight: 600, color: "var(--ink)" }}>{c?.name}</b><span className="sub">{c && customerSub(c)}</span></td>
+                      <td style={{ lineHeight: 1.25 }}>
+                        {(() => {
+                          const loc = locationOf(o);
+                          return loc ? <><span style={{ color: "var(--ink)" }}>{loc.main}</span>{loc.sub && <span className="sub">{loc.sub}</span>}</> : <span className="adm-muted">—</span>;
+                        })()}
+                      </td>
                       <td>{orderUnits(o)}</td>
                       <td className="b">{formatInr(orderTotal(o))}</td>
                       <td>{o.method}</td>
@@ -182,7 +212,7 @@ export default function OrdersScreen() {
                   );
                 })}
                 {!rows.length && (
-                  <tr><td colSpan={8}><div className="adm-empty">No orders match your search.</div></td></tr>
+                  <tr><td colSpan={9}><div className="adm-empty">No orders match your search.</div></td></tr>
                 )}
               </tbody>
             </table>
@@ -206,6 +236,7 @@ export default function OrdersScreen() {
           <div className="o-bulk">
             <b style={{ color: "var(--ink)", marginRight: 4 }}>{selected.length} order{selected.length === 1 ? "" : "s"} selected</b>
             <button className="adm-btn sm" disabled={!selected.length} onClick={() => printInvoices(entries(selectedOrders), data.settings)}>Print invoices</button>
+            <button className="adm-btn sm" disabled={!selected.length} onClick={() => deliver(selected)}>Mark delivered</button>
             <button className="adm-btn pri sm sp" disabled={!selected.length} onClick={() => pack(selected)}>Mark packed</button>
           </div>
         </section>
@@ -218,7 +249,10 @@ export default function OrdersScreen() {
                 <Badge tone={orderTone(active.status)}>{active.status}</Badge>
               </div>
               <p className="adm-muted" style={{ margin: "4px 0 14px" }}>
-                Placed {fmtDateTime(active.placedAt)} · {active.payment.status === "pending" ? "Payment pending" : "Paid"} via {active.method} (Razorpay)
+                Placed {fmtDateTime(active.placedAt)} ·{" "}
+                {isTestPayment(active.payment.id)
+                  ? `Test payment via ${active.method} (no money collected)`
+                  : `${active.payment.status === "pending" ? "Payment pending" : "Paid"} via ${active.method} (Razorpay)`}
               </p>
 
               {active.status === "New" && (
@@ -230,15 +264,27 @@ export default function OrdersScreen() {
                   </div>
                 </div>
               )}
+              {active.status === "Packed" && (
+                <div className="adm-box plain">
+                  <div className="adm-box-h">Packed · out for delivery</div>
+                  <p>Mark it delivered once the customer has received it — they get a delivery confirmation email.</p>
+                  <div className="adm-box-a">
+                    <button className="adm-btn pri sm" onClick={() => deliver([active.number])}>Mark delivered</button>
+                  </div>
+                </div>
+              )}
 
               <div className="o-sec">
                 <div className="adm-fl">Customer</div>
-                <div className="o-name">{activeCustomer.name}</div>
-                <div className="adm-muted">{maskPhone(activeCustomer.phone)} · {maskEmail(activeCustomer.email)}</div>
+                <div className="o-name">{active.shipName || activeCustomer.name}</div>
+                <div className="adm-muted">
+                  {maskPhone(active.shipPhone || activeCustomer.phone)} · {maskEmail(active.email || activeCustomer.email)}
+                </div>
               </div>
               <div className="o-sec">
-                <div className="adm-fl">Address</div>
-                <div style={{ lineHeight: 1.5 }}>{active.address}</div>
+                <div className="adm-fl">Delivery location</div>
+                <div style={{ lineHeight: 1.5 }}>{active.address || "—"}</div>
+                {active.deliveredAt && <div className="adm-muted" style={{ marginTop: 4 }}>Delivered {fmtDateTime(active.deliveredAt)}</div>}
               </div>
               <div className="o-sec">
                 <div className="adm-fl">Items</div>

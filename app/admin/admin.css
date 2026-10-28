@@ -353,7 +353,7 @@
   .s-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 1100px) {
-  .o-wrap, .p-wrap, .c-wrap, .y-wrap, .d-row3 { grid-template-columns: minmax(0, 1fr); }
+  .o-wrap, .p-wrap, .c-wrap, .y-wrap, .d-row3 { grid-template-columns: minmax(0, 1fr) !important; }
   .o-panel { min-height: 0; }
   .b-grid { grid-template-columns: 1fr; }
 }

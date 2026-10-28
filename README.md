@@ -210,12 +210,53 @@ in Products & Stock appears on the site (hidden products disappear from it).
   new invitees to the invite page.
 - **Customers** lists every site account (synced from sign-ups by the database) plus anyone who ordered.
 
+### Online checkout, order emails and delivery
+
+Flow: cart → **Place order** → sign in → name, account email (auto-filled), mobile and delivery
+location → **payment step** → the order, items and stock deduction are saved in one database
+transaction (`finalize_checkout`) → confirmation email to the customer + new-order email to the
+store/owner. New orders appear in **Admin → Orders** automatically (the panel refreshes every 30 s and
+announces new orders). **Packed → Mark delivered** sends the customer a delivery-confirmation email.
+
+**Payment step — test mode (current default).** `PAYMENT_PROVIDER=dummy` shows a clearly labelled
+simulated payment screen (UPI / card / netbanking, plus "Simulate a failed payment"). Paying creates a
+real order and sends the real emails, but no money moves. Test orders show "Test payment" in the admin
+panel, invoices and emails.
+
+**Real payments later.** Set `PAYMENT_PROVIDER=razorpay` and the Razorpay keys. The server then verifies
+the payment signature, re-checks the payment with Razorpay, and the test endpoint switches itself off.
+Add the webhook (`https://your-site/api/checkout/webhook`, events `payment.captured` and `order.paid`,
+secret in `RAZORPAY_WEBHOOK_SECRET`) so orders are recorded even if a customer closes the tab after paying.
+
+Setup:
+1. Run `supabase/migrations/20261026000000_checkout.sql` in the Supabase SQL editor.
+2. Copy `.env.example` to `.env.local`, fill in `SUPABASE_SERVICE_ROLE_KEY` (required — orders are saved
+   on the server), and optionally `RESEND_API_KEY` + `EMAIL_FROM` for emails; restart the dev server.
+
+Notes: prices and stock are always taken from the database, never from the browser. Delivery is free
+(the shipping amount is 0). Admin → Settings → Notifications switches the customer emails and the
+new-order email on/off. Without email keys, orders still work and the emails are skipped (logged).
+
+### Reviews and My orders
+
+- Customers see their own orders at **/orders** (account menu → My orders; hidden for admin accounts).
+- Right after an order is placed, the customer is asked for a **1–5 star review** with an optional message:
+  **Submit review**, **Leave later** (reminder on My orders) or **Skip**. Any order can be rated later from
+  My orders. One review per order; the reviewer's name and account are set by the database.
+- **Admin → Reviews** lists every review (customer, stars, message, order, products) with rating filters,
+  search, CSV export and Remove.
+- Setup: run `supabase/migrations/20261028000000_reviews.sql` after the checkout migration.
+
+### Admin login
+
+Opening **/admin** (or any admin page) while signed out shows the admin sign-in screen. The panel opens
+only after the server confirms the account is in `admin_members`; other accounts see "No admin access"
+with an option to switch accounts. Use **Sign out** at the bottom of the admin sidebar.
+
 ### Notes
 
 - Product photos are compressed in the browser, validated on the server (JPG/PNG/WebP, ≤ 1.5 MB) and
   stored in Supabase Storage.
 - If the database can't be reached, the storefront falls back to `data/products.ts` so it never goes blank.
-- Razorpay is **not** called: refunds are recorded in the database only. Orders are not created by the
-  website yet (checkout still opens an email), so Orders/Customers/Payments stay empty until an order
-  source is connected.
+- Razorpay is **not** called: refunds are recorded in the database only. Customers who pay online create orders automatically (see above).
 - `scripts/` and the SQL migration are the only places that touch the service role or schema.

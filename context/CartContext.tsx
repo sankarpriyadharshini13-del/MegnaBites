@@ -53,6 +53,8 @@ interface CartValue {
   hydrated: boolean;
   /** Last add message for the live region. */
   announcement: string;
+  /** Most recent successful add (drives the "Added to cart" notice; the cart no longer opens itself). */
+  lastAdded: { productId: string; name: string; at: number } | null;
   add: (productId: string, quantity?: number) => void;
   setQuantity: (productId: string, quantity: number) => void;
   remove: (productId: string) => void;
@@ -66,6 +68,7 @@ export function CartProvider({ children, onAdd }: { children: React.ReactNode; o
   const [items, dispatch] = useReducer(reducer, []);
   const [hydrated, setHydrated] = useState(false);
   const [announcement, setAnnouncement] = useState("");
+  const [lastAdded, setLastAdded] = useState<CartValue["lastAdded"]>(null);
   const onAddRef = useRef(onAdd);
   onAddRef.current = onAdd;
   const { getById } = useProducts();
@@ -96,6 +99,7 @@ export function CartProvider({ children, onAdd }: { children: React.ReactNode; o
     }
     dispatch({ type: "add", productId, quantity });
     setAnnouncement(`${p.name} added to cart`);
+    setLastAdded({ productId, name: p.name, at: Date.now() });
     onAddRef.current?.();
   }, [getById]);
   const setQuantity = useCallback((productId: string, quantity: number) => dispatch({ type: "set", productId, quantity }), []);
@@ -120,13 +124,14 @@ export function CartProvider({ children, onAdd }: { children: React.ReactNode; o
       hasUnpriced: lines.some((l) => l.lineTotal == null),
       hydrated,
       announcement,
+      lastAdded,
       add,
       setQuantity,
       remove,
       clear,
       maxQty: MAX_QTY,
     };
-  }, [items, hydrated, announcement, add, setQuantity, remove, clear, getById]);
+  }, [items, hydrated, announcement, lastAdded, add, setQuantity, remove, clear, getById]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

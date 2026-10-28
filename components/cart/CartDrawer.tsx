@@ -14,7 +14,7 @@ import { startCheckout } from "@/services/checkout";
 import { formatInr } from "@/lib/format";
 
 export default function CartDrawer() {
-  const { panel, close } = useUI();
+  const { panel, open, close } = useUI();
   const { lines, count, subtotal, hasUnpriced, setQuantity, remove, maxQty } = useCart();
   const { user } = useAuth();
   const { getById } = useProducts();
@@ -31,10 +31,15 @@ export default function CartDrawer() {
           We&apos;ll confirm the total when you place your order.
         </p>
       )}
-      <button type="button" className="btn-primary mt-4 w-full" onClick={() => startCheckout(lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })), user, getById)}>
-        Place order by email
+      <button type="button" className="btn-primary mt-4 w-full" onClick={() => open("checkout")}>
+        Place order
       </button>
-      <p className="mt-2 text-center text-xs text-ink/50">Online payment is coming soon. This opens a pre-filled order email.</p>
+      <p className="mt-2 text-center text-xs text-ink/50">
+        Pay online at checkout.{" "}
+        <button type="button" className="underline underline-offset-2 hover:text-clay" onClick={() => startCheckout(lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })), user, getById)}>
+          Prefer to order by email?
+        </button>
+      </p>
     </div>
   ) : null;
 

@@ -60,6 +60,11 @@ export function mapOrder(r: Row): Order {
     address: r.address ?? "",
     timeline: events.map((e: Row) => ({ label: e.label, note: e.note ?? undefined, at: e.at })),
     payment: { id: r.payment_id ?? "", status: r.payment_status as PaymentStatus, refunded: r.payment_refunded ?? 0 },
+    email: r.email ?? "",
+    shipName: r.ship_name ?? "",
+    shipPhone: r.ship_phone ?? "",
+    location: { city: r.ship_city ?? "", state: r.ship_state ?? "", pincode: r.ship_pincode ?? "" },
+    deliveredAt: r.delivered_at ?? null,
   };
 }
 

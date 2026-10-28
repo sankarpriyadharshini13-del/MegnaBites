@@ -30,3 +30,15 @@ export function userClient(accessToken: string): SupabaseClient {
 }
 
 export const publicUrl = url ?? "";
+
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+export const serviceConfigured = Boolean(url && serviceKey);
+
+/**
+ * Service-role client: bypasses row-level security. Used ONLY by checkout routes after the payment has
+ * been verified with Razorpay (no user session exists for webhooks). Never expose this key to the browser.
+ */
+export function serviceClient(): SupabaseClient {
+  if (!url || !serviceKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+  return createClient(url, serviceKey, { auth: authOptions, global: { fetch: noStore } });
+}

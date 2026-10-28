@@ -18,7 +18,7 @@ const RANGES: { id: Range; label: string; days: number; prev: string }[] = [
 ];
 
 const DAY = 86_400_000;
-const STATUS_COLORS: Record<string, string> = { Packed: "#3b5a3a", New: "#d9a441", Cancelled: "#9aa39a" };
+const STATUS_COLORS: Record<string, string> = { Delivered: "#3b5a3a", Packed: "#7a8fbf", New: "#d9a441", Cancelled: "#9aa39a" };
 const TOP_COLORS = ["#c8602b", "#d9a441", "#3b5a3a"];
 
 const sum = (orders: Order[]) => orders.reduce((s, o) => s + orderTotal(o), 0);
@@ -84,7 +84,7 @@ export default function DashboardScreen() {
     const buyers = perCustomer.size;
     const repeat = [...perCustomer.values()].filter((n) => n >= 2).length;
     const cities = new Map<string, number>();
-    for (const c of data.customers) if (perCustomer.has(c.id)) cities.set(c.city, (cities.get(c.city) ?? 0) + 1);
+    for (const c of data.customers) if (perCustomer.has(c.id) && c.city) cities.set(c.city, (cities.get(c.city) ?? 0) + 1);
     const topCity = [...cities.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
 
     return {
@@ -100,7 +100,7 @@ export default function DashboardScreen() {
       top,
       repeatPct: buyers ? Math.round((repeat / buyers) * 100) : 0,
       topCity,
-      status: ["Packed", "New", "Cancelled"].map((n) => ({ n, v: curAll.filter((o) => o.status === n).length, c: STATUS_COLORS[n] })),
+      status: ["Delivered", "Packed", "New", "Cancelled"].map((n) => ({ n, v: curAll.filter((o) => o.status === n).length, c: STATUS_COLORS[n] })),
     };
   }, [data.orders, data.customers, now, R.days, range]);
 

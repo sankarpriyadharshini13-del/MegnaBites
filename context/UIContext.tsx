@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
-export type Panel = "cart" | "search" | "account" | "menu" | null;
+export type Panel = "cart" | "checkout" | "search" | "account" | "menu" | null;
 
 interface UIValue {
   panel: Panel;

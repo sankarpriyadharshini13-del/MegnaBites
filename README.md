@@ -246,6 +246,14 @@ new-order email on/off. Without email keys, orders still work and the emails are
 - **Admin → Reviews** lists every review (customer, stars, message, order, products) with rating filters,
   search, CSV export and Remove.
 - Setup: run `supabase/migrations/20261028000000_reviews.sql` after the checkout migration.
+- **Live on website:** each review in Admin → Reviews has a switch (off by default). While at least one is on,
+  the home page shows a **Customer reviews** section with those reviews only; with none on, the section isn't
+  shown. The website shows first name + last initial ("Asha K."), stars, message, products and month — never
+  the full name, account or order number. Setup: run `supabase/migrations/20261030000000_review_publishing.sql`.
+- The home section stays compact however many reviews are live: a rating summary (average + per-star bars) beside
+  a swipeable row of the 8 newest reviews, and **See all reviews** → **/reviews** (star filter, 12 per page,
+  Load more). Long messages are collapsed with "Read more". For exact totals and paging past 50 reviews, run
+  `supabase/migrations/20261031000000_review_listing.sql`; until then the site uses the newest 50.
 
 ### Prices and cart quantity
 

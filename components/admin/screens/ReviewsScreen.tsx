@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { downloadCsv, fmtDate, fmtDateTime, initials } from "@/lib/admin/format";
 import { useAdminData } from "@/lib/admin/store";
 import type { Review } from "@/lib/admin/types";
-import { ConfirmModal, Topbar } from "../ui";
+import { ConfirmModal, Toggle, Topbar } from "../ui";
 
 function Stars({ value, size = 15 }: { value: number; size?: number }) {
   return (
@@ -20,11 +20,13 @@ function Stars({ value, size = 15 }: { value: number; size?: number }) {
 }
 
 type Filter = "all" | 1 | 2 | 3 | 4 | 5;
+type Visibility = "all" | "live" | "hidden";
 
 export default function ReviewsScreen() {
   const { data, mutate, label, now } = useAdminData();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
+  const [visibility, setVisibility] = useState<Visibility>("all");
   const [removing, setRemoving] = useState<Review | null>(null);
 
   const reviews = data.reviews;
@@ -39,7 +41,7 @@ export default function ReviewsScreen() {
       dist,
       fiveShare: total ? Math.round((dist[0].count / total) * 100) : 0,
       thisMonth: reviews.filter((r) => new Date(r.createdAt).getTime() >= monthStart).length,
-      withText: reviews.filter((r) => r.message).length,
+      live: reviews.filter((r) => r.published).length,
     };
   }, [reviews, now]);
 
@@ -48,16 +50,29 @@ export default function ReviewsScreen() {
     return reviews.filter(
       (r) =>
         (filter === "all" || r.rating === filter) &&
+        (visibility === "all" || (visibility === "live") === r.published) &&
         (!q || r.customerName.toLowerCase().includes(q) || r.message.toLowerCase().includes(q) || r.products.toLowerCase().includes(q) || label(r.orderNumber).toLowerCase().includes(q)),
     );
-  }, [reviews, filter, query, label]);
+  }, [reviews, filter, visibility, query, label]);
 
   const maxCount = Math.max(1, ...stats.dist.map((d) => d.count));
 
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const togglePublished = async (r: Review, published: boolean) => {
+    setBusyId(r.id);
+    await mutate(
+      `/api/admin/reviews/${r.id}`,
+      "PUT",
+      { published },
+      published ? `${r.customerName}'s review is now live on the home page.` : `${r.customerName}'s review is hidden from the website.`,
+    );
+    setBusyId(null);
+  };
+
   const exportCsv = () =>
     downloadCsv("reviews.csv", [
-      ["Date", "Customer", "Rating", "Review", "Order", "Products"],
-      ...list.map((r) => [fmtDateTime(r.createdAt), r.customerName, r.rating, r.message, label(r.orderNumber), r.products]),
+      ["Date", "Customer", "Rating", "Review", "Order", "Products", "Live on website"],
+      ...list.map((r) => [fmtDateTime(r.createdAt), r.customerName, r.rating, r.message, label(r.orderNumber), r.products, r.published ? "Yes" : "No"]),
     ]);
 
   return (
@@ -75,7 +90,7 @@ export default function ReviewsScreen() {
         </div>
         <div className="adm-kpi"><div className="l">Total reviews</div><div className="v">{stats.total}</div><div className="d">{stats.thisMonth} this month</div></div>
         <div className="adm-kpi"><div className="l">5-star reviews</div><div className="v">{stats.fiveShare}%</div><div className="d">{stats.dist[0].count} of {stats.total}</div></div>
-        <div className="adm-kpi"><div className="l">With a message</div><div className="v">{stats.withText}</div><div className="d">{stats.total - stats.withText} rating only</div></div>
+        <div className="adm-kpi"><div className="l">Live on website</div><div className="v">{stats.live}</div><div className="d">{stats.live ? `shown on the home page` : "Switch one on to show a Reviews section"}</div></div>
       </div>
 
       <div className="c-wrap" style={{ gridTemplateColumns: "300px minmax(0, 1fr)" }}>
@@ -111,9 +126,16 @@ export default function ReviewsScreen() {
             <h2>{filter === "all" ? "All reviews" : `${filter}-star reviews`}</h2>
             <span>{list.length} shown</span>
           </div>
+          <div className="adm-chips" role="tablist" aria-label="Filter by website visibility" style={{ marginBottom: 6 }}>
+            {([["all", "All", stats.total], ["live", "Live on website", stats.live], ["hidden", "Hidden", stats.total - stats.live]] as const).map(([v, text, n]) => (
+              <button key={v} type="button" role="tab" aria-selected={visibility === v} className={`adm-chip${visibility === v ? " on" : ""}`} onClick={() => setVisibility(v)}>
+                {text} <em>{n}</em>
+              </button>
+            ))}
+          </div>
           {list.length === 0 ? (
             <div className="adm-empty">
-              {stats.total ? "No reviews match this filter." : "No reviews yet. Customers are asked for a review right after they place an order."}
+              {stats.total ? "No reviews match these filters." : "No reviews yet. Customers are asked for a review right after they place an order."}
             </div>
           ) : (
             <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
@@ -134,7 +156,18 @@ export default function ReviewsScreen() {
                       {r.products && <> · {r.products}</>}
                     </p>
                   </div>
-                  <button type="button" className="adm-btn sm" style={{ alignSelf: "flex-start" }} onClick={() => setRemoving(r)}>Remove</button>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10, flexShrink: 0 }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 600, color: r.published ? "var(--forest)" : "var(--muted)", whiteSpace: "nowrap" }}>
+                      Live on website
+                      <Toggle
+                        checked={r.published}
+                        label={`Show ${r.customerName}'s review on the website`}
+                        disabled={busyId === r.id}
+                        onChange={(v) => togglePublished(r, v)}
+                      />
+                    </label>
+                    <button type="button" className="adm-btn sm" onClick={() => setRemoving(r)}>Remove</button>
+                  </div>
                 </li>
               ))}
             </ul>

@@ -1,8 +1,23 @@
 import { HttpError, dbError, handle, json, readJson } from "@/lib/server/http";
 import { requireUser } from "@/lib/server/guard";
 import { int, str } from "@/lib/server/model";
+import { getReviewsPage } from "@/lib/server/publicReviews";
 
 export const dynamic = "force-dynamic";
+
+/** Public: one page of the reviews switched "Live on website" (?offset=0&limit=12&rating=5). */
+export const GET = handle(async (req) => {
+  const q = new URL(req.url).searchParams;
+  const num = (v: string | null) => (v && /^\d+$/.test(v) ? Number(v) : null);
+  const rating = num(q.get("rating"));
+  return json(
+    await getReviewsPage({
+      offset: num(q.get("offset")) ?? 0,
+      limit: num(q.get("limit")) ?? 12,
+      rating: rating != null && rating >= 1 && rating <= 5 ? rating : null,
+    }),
+  );
+});
 
 /**
  * A customer reviews one of their own orders (1–5 stars + optional message). Inserted with the

@@ -50,6 +50,7 @@ export const GET = handle(async (req) => {
       rating: r.rating,
       message: r.message ?? "",
       createdAt: r.created_at,
+      published: Boolean(r.published),
       products: ((r.orders?.order_items ?? []) as { name: string; qty: number }[]).map((i) => `${i.name} ×${i.qty}`).join(", "),
     })),
     me: { userId: a.userId, email: a.email, name: a.name, role: a.role },

@@ -167,6 +167,8 @@ export interface Review {
   createdAt: string;
   /** "Idli Podi ×2, Country Sugar ×1" */
   products: string;
+  /** "Live on website": shown in the home page Reviews section. */
+  published: boolean;
 }
 
 export interface AdminData {

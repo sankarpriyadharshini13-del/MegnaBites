@@ -15,7 +15,7 @@ import { formatInr } from "@/lib/format";
 
 export default function CartDrawer() {
   const { panel, open, close } = useUI();
-  const { lines, count, subtotal, hasUnpriced, setQuantity, remove, maxQty } = useCart();
+  const { lines, count, subtotal, hasUnpriced, setQuantity, remove, maxFor, notifyLimit, limitNotice, dismissLimit } = useCart();
   const { user } = useAuth();
   const { getById } = useProducts();
 
@@ -72,7 +72,7 @@ export default function CartDrawer() {
                 </div>
                 <p className="text-[11px] text-ink/50 sm:text-xs">{product.packSize ?? "Pack size to be confirmed"}</p>
                 <div className="mt-2.5 flex items-center justify-between gap-2 sm:mt-3">
-                  <QuantityControl value={quantity} max={maxQty} label={product.name} onChange={(n) => setQuantity(product.id, n)} />
+                  <QuantityControl value={quantity} max={Math.max(1, maxFor(product.id))} label={product.name} onChange={(n) => setQuantity(product.id, n)} onLimit={() => notifyLimit(product.id)} />
                   {lineTotal != null ? (
                     <span className="text-right">
                       <Price amount={lineTotal} original={product.originalPriceInr != null ? product.originalPriceInr * quantity : null} className="!text-base sm:!text-lg" originalClassName="text-xs" />
@@ -81,6 +81,15 @@ export default function CartDrawer() {
                     <Price amount={null} className="!text-xs" />
                   )}
                 </div>
+                {limitNotice?.productId === product.id && (
+                  <p role="alert" className="mt-2.5 flex items-start gap-2 rounded-xl bg-honey/20 px-3 py-2 text-xs leading-relaxed text-forest-deep">
+                    <span className="flex-1">
+                      {limitNotice.message}{" "}
+                      <Link href="/#contact" onClick={close} className="font-semibold underline underline-offset-2 hover:text-clay">Contact our shop</Link>
+                    </span>
+                    <button type="button" onClick={dismissLimit} aria-label="Dismiss message" className="-mr-1 -mt-0.5 rounded px-1 text-base leading-none text-forest/60 hover:text-forest">×</button>
+                  </p>
+                )}
               </div>
             </li>
           ))}

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
-import { useProducts } from "@/context/ProductsContext";
 import { BagIcon, MinusIcon, PlusIcon, TrashIcon } from "@/components/ui/Icons";
 
 /**
@@ -26,11 +25,9 @@ export default function AddToCartButton({
   /** Short "Add" / "Sold out" label for tight layouts such as product cards. */
   compact?: boolean;
 }) {
-  const { lines, add, setQuantity, remove, maxQty, hydrated } = useCart();
-  const { getById } = useProducts();
+  const { lines, add, setQuantity, remove, maxFor, notifyLimit, hydrated } = useCart();
   const qty = lines.find((l) => l.product.id === productId)?.quantity ?? 0;
-  const stock = getById(productId)?.stock;
-  const max = stock == null ? maxQty : Math.min(maxQty, Math.max(0, stock));
+  const max = maxFor(productId);
 
   // Keep keyboard focus on the control the customer is using when it swaps between button and stepper.
   const focusNext = useRef<"stepper" | "button" | null>(null);
@@ -45,7 +42,7 @@ export default function AddToCartButton({
 
   if (inCart) {
     const size = compact ? "h-10" : "h-12";
-    const btn = `focus-ring grid ${size} ${compact ? "w-10" : "w-12"} shrink-0 place-items-center rounded-full transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`;
+    const btn = `focus-ring grid ${size} ${compact ? "w-10" : "w-12"} shrink-0 place-items-center rounded-full transition-colors hover:bg-white/15 aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent`;
     const atMax = qty >= max;
     return (
       <div
@@ -74,10 +71,10 @@ export default function AddToCartButton({
           ref={plusRef}
           type="button"
           className={btn}
-          aria-label={`Increase quantity of ${name}`}
-          title={atMax ? (stock != null && stock <= maxQty ? `Only ${max} in stock` : `Up to ${maxQty} per order`) : undefined}
-          disabled={atMax}
-          onClick={() => setQuantity(productId, qty + 1)}
+          aria-label={atMax ? `Increase quantity of ${name} (limit reached)` : `Increase quantity of ${name}`}
+          // Stays clickable at the limit so the customer is told why the quantity won't go up.
+          aria-disabled={atMax || undefined}
+          onClick={() => (atMax ? notifyLimit(productId) : setQuantity(productId, qty + 1))}
         >
           <PlusIcon />
         </button>

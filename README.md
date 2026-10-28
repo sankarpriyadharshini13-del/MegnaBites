@@ -247,6 +247,16 @@ new-order email on/off. Without email keys, orders still work and the emails are
   search, CSV export and Remove.
 - Setup: run `supabase/migrations/20261028000000_reviews.sql` after the checkout migration.
 
+### Prices and cart quantity
+
+- **Admin → Products & Stock** has two price fields: **Original price** (optional, e.g. MRP) and
+  **Actual price (selling)**. Customers always pay the selling price. When the original price is higher, the shop
+  shows it struck through next to the selling price, with a "% off" badge.
+- Setup: run `supabase/migrations/20261029000000_original_price.sql`. Until then the shop keeps working and shows
+  selling prices only.
+- On every product card and product page, **Add** turns into a **[−] qty [+]** stepper once the product is in
+  the cart (capped at the stock left and 20 per order). Going below 1 removes it.
+
 ### Admin login
 
 Opening **/admin** (or any admin page) while signed out shows the admin sign-in screen. The panel opens

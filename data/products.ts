@@ -23,6 +23,7 @@ export const products: Product[] = [
       "Our classic idli podi: a traditional lentil and spice blend, stone-ground in small batches in Kolathur, Chennai. Stir into sesame or ghee oil and serve with idli, dosa or hot rice.",
     packSize: null,
     priceInr: null,
+    originalPriceInr: null,
     image: null,
     imageAlt: "Magna Eco Bites Idli Podi pack",
     featured: true,
@@ -38,6 +39,7 @@ export const products: Product[] = [
       "Minimally processed country sugar, packed in Kolathur, Chennai. A rustic alternative for tea, coffee, payasam and everyday sweets.",
     packSize: null,
     priceInr: null,
+    originalPriceInr: null,
     image: null,
     imageAlt: "Magna Eco Bites Country Sugar pack",
     featured: true,
@@ -53,6 +55,7 @@ export const products: Product[] = [
       "Our classic idli podi blended with moringa leaf. Stone-ground in small batches in Kolathur, Chennai — traditional taste, naturally yours.",
     packSize: null,
     priceInr: null,
+    originalPriceInr: null,
     image: "/images/products/moringa-idli-podi.jpg",
     imageAlt:
       "Kraft pack of Magna Eco Bites Moringa Idli Podi beside a wooden bowl of the podi",

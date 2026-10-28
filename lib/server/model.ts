@@ -30,6 +30,7 @@ export function mapProduct(r: Row): AdminProduct {
     name: r.name,
     sku: r.sku ?? "",
     price: r.price ?? null,
+    originalPrice: r.original_price ?? null,
     stock: r.stock ?? 0,
     packSize: r.pack_size ?? "",
     tag: r.tag ?? "",
@@ -156,6 +157,7 @@ export interface ProductInput {
   id?: string;
   name: string;
   price: number | null;
+  originalPrice: number | null;
   stock: number;
   packSize: string;
   tag: string;
@@ -168,6 +170,11 @@ export function parseProduct(body: Row): ProductInput {
   const name = str(body.name, "Product name", 120, { required: true });
   let price: number | null = null;
   if (body.price !== null && body.price !== undefined && body.price !== "") price = int(body.price, "Price", 0, 10_000_000);
+  let originalPrice: number | null = null;
+  if (body.originalPrice !== null && body.originalPrice !== undefined && body.originalPrice !== "")
+    originalPrice = int(body.originalPrice, "Original price", 0, 10_000_000);
+  if (originalPrice != null && price == null) throw bad("Add a selling price along with the original price.");
+  if (originalPrice != null && price != null && originalPrice < price) throw bad("Original price can't be lower than the selling price.");
   const stock = int(body.stock ?? 0, "Stock", 0, 1_000_000);
   const images = body.images ?? [];
   if (!Array.isArray(images) || images.length > 5) throw bad("A product can have at most 5 photos.");
@@ -183,6 +190,7 @@ export function parseProduct(body: Row): ProductInput {
     id,
     name,
     price,
+    originalPrice,
     stock,
     packSize: str(body.packSize, "Pack size", 40),
     tag: str(body.tag, "Tag", 30),

@@ -10,6 +10,8 @@ export interface AdminProduct {
   sku: string;
   /** Whole INR. null while the product is still a draft without a price. */
   price: number | null;
+  /** Optional "was" price (MRP), whole INR. Shown struck through on the shop when higher than `price`. */
+  originalPrice: number | null;
   stock: number;
   packSize: string;
   tag: string;

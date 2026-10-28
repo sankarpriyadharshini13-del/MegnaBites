@@ -3,7 +3,10 @@ import { products as fallbackProducts, getProduct as fallbackProduct } from "@/d
 import type { Product } from "@/types";
 import { anonClient, supabaseConfigured } from "./supabase";
 
-const COLUMNS = "id, name, price, stock, pack_size, tag, description, long_description, images, created_at";
+const BASE_COLUMNS = "id, name, price, stock, pack_size, tag, description, long_description, images, created_at";
+const COLUMNS = `${BASE_COLUMNS}, original_price`;
+/** original_price arrives with its own migration; until it's applied, read the catalogue without it. */
+const missingColumn = (e: { code?: string } | null) => e?.code === "42703" || e?.code === "PGRST204";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function toProduct(r: any): Product {
@@ -17,6 +20,7 @@ function toProduct(r: any): Product {
     longDescription: r.long_description || r.description || "",
     packSize: r.pack_size || null,
     priceInr: r.price ?? null,
+    originalPriceInr: r.price != null && r.original_price != null && r.original_price > r.price ? r.original_price : null,
     image,
     images: r.images ?? [],
     imageAlt: r.name,
@@ -32,12 +36,10 @@ function toProduct(r: any): Product {
 export async function getPublicProducts(): Promise<Product[]> {
   if (!supabaseConfigured) return fallbackProducts;
   try {
-    const { data, error } = await anonClient()
-      .from("products")
-      .select(COLUMNS)
-      .eq("visible", true)
-      .order("created_at", { ascending: true })
-      .order("name", { ascending: true });
+    const query = (cols: string) =>
+      anonClient().from("products").select(cols).eq("visible", true).order("created_at", { ascending: true }).order("name", { ascending: true });
+    let { data, error } = await query(COLUMNS);
+    if (missingColumn(error)) ({ data, error } = await query(BASE_COLUMNS));
     if (error) throw error;
     return (data ?? []).map(toProduct);
   } catch (e) {
@@ -49,7 +51,9 @@ export async function getPublicProducts(): Promise<Product[]> {
 export async function getPublicProduct(slug: string): Promise<Product | null> {
   if (!supabaseConfigured) return fallbackProduct(slug) ?? null;
   try {
-    const { data, error } = await anonClient().from("products").select(COLUMNS).eq("id", slug).eq("visible", true).maybeSingle();
+    const query = (cols: string) => anonClient().from("products").select(cols).eq("id", slug).eq("visible", true).maybeSingle();
+    let { data, error } = await query(COLUMNS);
+    if (missingColumn(error)) ({ data, error } = await query(BASE_COLUMNS));
     if (error) throw error;
     return data ? toProduct(data) : null;
   } catch (e) {

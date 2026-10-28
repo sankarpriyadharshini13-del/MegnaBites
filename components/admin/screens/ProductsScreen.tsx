@@ -14,6 +14,7 @@ const MAX_PHOTOS = 5;
 
 interface Draft {
   name: string;
+  originalPrice: string;
   price: string;
   stock: string;
   packSize: string;
@@ -25,6 +26,7 @@ interface Draft {
 
 const toDraft = (p: AdminProduct | null): Draft => ({
   name: p?.name ?? "",
+  originalPrice: p?.originalPrice != null ? String(p.originalPrice) : "",
   price: p?.price != null ? String(p.price) : "",
   stock: p ? String(p.stock) : "0",
   packSize: p?.packSize ?? "",
@@ -102,6 +104,7 @@ export default function ProductsScreen() {
     id: p.id,
     name: p.name,
     price: p.price,
+    originalPrice: p.originalPrice,
     stock: p.stock,
     packSize: p.packSize,
     tag: p.tag,
@@ -121,7 +124,14 @@ export default function ProductsScreen() {
     if (draft.price.trim() !== "") {
       price = Number(draft.price);
       if (!Number.isInteger(price) || price < 0) errs.price = "Use a whole number of rupees.";
-    } else if (draft.visible) errs.price = "Add a price to make this product visible.";
+    } else if (draft.visible) errs.price = "Add a selling price to make this product visible.";
+    let originalPrice: number | null = null;
+    if (draft.originalPrice.trim() !== "") {
+      originalPrice = Number(draft.originalPrice);
+      if (!Number.isInteger(originalPrice) || originalPrice < 0) errs.originalPrice = "Use a whole number of rupees.";
+      else if (price == null && !errs.price) errs.price = "Add the selling price too.";
+      else if (price != null && originalPrice < price) errs.originalPrice = "Can't be lower than the selling price.";
+    }
     const stock = draft.stock.trim() === "" ? 0 : Number(draft.stock);
     if (!Number.isInteger(stock) || stock < 0) errs.stock = "Use a whole number, 0 or more.";
     setErrors(errs);
@@ -135,6 +145,7 @@ export default function ProductsScreen() {
         id: product?.id,
         name: draft.name.trim(),
         price,
+        originalPrice,
         stock,
         packSize: draft.packSize.trim(),
         tag: draft.tag.trim(),
@@ -147,6 +158,14 @@ export default function ProductsScreen() {
     setBusy(false);
     if (res.ok && isNew && res.data) setSelectedId(res.data.product.id);
   };
+
+  /** Live "was / now" preview while typing both prices. */
+  const pricePreview = (() => {
+    const price = Number(draft.price);
+    const original = Number(draft.originalPrice);
+    if (!draft.price.trim() || !draft.originalPrice.trim() || !Number.isInteger(price) || !Number.isInteger(original) || original <= price || price < 0) return null;
+    return { price, original, off: Math.round(((original - price) / original) * 100) };
+  })();
 
   const barcode = product?.barcode || (isNew ? nextBarcode(data.products) : "");
   const tint = product?.color ?? PRODUCT_COLORS[data.products.length % PRODUCT_COLORS.length];
@@ -194,7 +213,12 @@ export default function ProductsScreen() {
                           </div>
                         </td>
                         <td style={{ color: "var(--muted)" }}>{p.sku || "—"}</td>
-                        <td className="b">{p.price != null ? formatInr(p.price) : "—"}</td>
+                        <td className="b">
+                          {p.price != null ? formatInr(p.price) : "—"}
+                          {p.price != null && p.originalPrice != null && p.originalPrice > p.price && (
+                            <s style={{ display: "block", fontWeight: 400, fontSize: 11.5, color: "var(--muted)" }}>{formatInr(p.originalPrice)}</s>
+                          )}
+                        </td>
                         <td>
                           {p.stock} units
                           <div className={`adm-meter${p.stock <= LOW_STOCK ? " low" : ""}`}><i style={{ width: `${Math.min(100, p.stock)}%` }} /></div>
@@ -283,27 +307,39 @@ export default function ProductsScreen() {
             <input id="pf-name" className={`adm-in${errors.name ? " err" : ""}`} value={draft.name} onChange={(e) => set("name", e.target.value)} />
             {errors.name && <p className="adm-err">{errors.name}</p>}
           </div>
-          <div className="adm-row2 adm-fg">
+          <div className="adm-row2 adm-fg" style={{ marginBottom: 6 }}>
             <div>
-              <label className="adm-fl" htmlFor="pf-price">Price (₹)</label>
-              <input id="pf-price" className={`adm-in${errors.price ? " err" : ""}`} inputMode="numeric" value={draft.price} onChange={(e) => set("price", e.target.value)} />
+              <label className="adm-fl" htmlFor="pf-mrp">Original price (₹)</label>
+              <input id="pf-mrp" className={`adm-in${errors.originalPrice ? " err" : ""}`} inputMode="numeric" placeholder="Optional, e.g. MRP" aria-describedby="pf-price-hint" value={draft.originalPrice} onChange={(e) => set("originalPrice", e.target.value)} />
+              {errors.originalPrice && <p className="adm-err">{errors.originalPrice}</p>}
+            </div>
+            <div>
+              <label className="adm-fl" htmlFor="pf-price">Actual price (selling) (₹)</label>
+              <input id="pf-price" className={`adm-in${errors.price ? " err" : ""}`} inputMode="numeric" aria-describedby="pf-price-hint" value={draft.price} onChange={(e) => set("price", e.target.value)} />
               {errors.price && <p className="adm-err">{errors.price}</p>}
             </div>
+          </div>
+          <p id="pf-price-hint" className="adm-muted" style={{ margin: "0 0 14px", fontSize: 12 }}>
+            {pricePreview ? (
+              <>Shop shows <s>{formatInr(pricePreview.original)}</s> <b style={{ color: "var(--ink)" }}>{formatInr(pricePreview.price)}</b> · {pricePreview.off}% off</>
+            ) : (
+              "Customers pay the selling price. Add an original price above it to show a struck-through “was” price."
+            )}
+          </p>
+          <div className="adm-row2 adm-fg">
             <div>
               <label className="adm-fl" htmlFor="pf-stock">Stock</label>
               <input id="pf-stock" className={`adm-in${errors.stock ? " err" : ""}`} inputMode="numeric" value={draft.stock} onChange={(e) => set("stock", e.target.value)} />
               {errors.stock && <p className="adm-err">{errors.stock}</p>}
             </div>
-          </div>
-          <div className="adm-row2 adm-fg">
             <div>
               <label className="adm-fl" htmlFor="pf-pack">Pack size</label>
               <input id="pf-pack" className="adm-in" value={draft.packSize} placeholder="e.g. 200 g" onChange={(e) => set("packSize", e.target.value)} />
             </div>
-            <div>
-              <label className="adm-fl" htmlFor="pf-tag">Tag</label>
-              <input id="pf-tag" className="adm-in" value={draft.tag} placeholder="e.g. Bestseller" onChange={(e) => set("tag", e.target.value)} />
-            </div>
+          </div>
+          <div className="adm-fg">
+            <label className="adm-fl" htmlFor="pf-tag">Tag</label>
+            <input id="pf-tag" className="adm-in" value={draft.tag} placeholder="e.g. Bestseller" onChange={(e) => set("tag", e.target.value)} />
           </div>
           <div className="adm-fg">
             <label className="adm-fl" htmlFor="pf-desc">Description</label>
@@ -356,7 +392,9 @@ export default function ProductsScreen() {
               <h3 style={{ fontFamily: "var(--font-serif)", fontSize: 20, color: "var(--ink)", margin: "8px 0 2px" }}>{draft.name}</h3>
               <p className="adm-muted">{draft.packSize}</p>
               <p style={{ margin: "10px 0", lineHeight: 1.55 }}>{draft.description || "No description yet."}</p>
+              {pricePreview && <s className="adm-muted" style={{ marginRight: 8, fontSize: 14 }}>{formatInr(pricePreview.original)}</s>}
               <b style={{ fontSize: 18, color: "var(--ink)" }}>{draft.price.trim() && Number.isFinite(Number(draft.price)) ? formatInr(Number(draft.price)) : "₹—"}</b>
+              {pricePreview && <span style={{ marginLeft: 8 }}><Badge tone="green">{pricePreview.off}% off</Badge></span>}
               {!draft.visible && <p className="adm-muted" style={{ marginTop: 8 }}>Hidden — customers won&apos;t see this until you switch on “Visible on website”.</p>}
             </div>
           </div>

@@ -11,6 +11,8 @@ export interface Product {
   packSize: string | null;
   /** Price in whole INR. null until confirmed — never guess. */
   priceInr: number | null;
+  /** Optional "was" price (MRP) in whole INR. Shown struck through when higher than `priceInr`. */
+  originalPriceInr: number | null;
   /** Path under /public. null renders an honest "photo coming soon" tile. */
   image: string | null;
   /** All photos (first one = `image`). Optional for the bundled fallback catalogue. */

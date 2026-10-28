@@ -73,7 +73,13 @@ export default function CartDrawer() {
                 <p className="text-[11px] text-ink/50 sm:text-xs">{product.packSize ?? "Pack size to be confirmed"}</p>
                 <div className="mt-2.5 flex items-center justify-between gap-2 sm:mt-3">
                   <QuantityControl value={quantity} max={maxQty} label={product.name} onChange={(n) => setQuantity(product.id, n)} />
-                  {lineTotal != null ? <Price amount={lineTotal} className="!text-base sm:!text-lg" /> : <Price amount={null} className="!text-xs" />}
+                  {lineTotal != null ? (
+                    <span className="text-right">
+                      <Price amount={lineTotal} original={product.originalPriceInr != null ? product.originalPriceInr * quantity : null} className="!text-base sm:!text-lg" originalClassName="text-xs" />
+                    </span>
+                  ) : (
+                    <Price amount={null} className="!text-xs" />
+                  )}
                 </div>
               </div>
             </li>

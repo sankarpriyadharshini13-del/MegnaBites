@@ -8,6 +8,8 @@ import { ArrowIcon, LeafIcon, PinIcon, StoneIcon } from "@/components/ui/Icons";
 import { servingIdeas } from "@/data/brand";
 import { recommend } from "@/lib/recommend";
 import { getPublicProduct, getPublicProducts } from "@/lib/server/publicProducts";
+import Price, { percentOff } from "@/components/ui/Price";
+import { formatInr } from "@/lib/format";
 
 const ProductGallery = nextDynamic(() => import("@/components/product/ProductGallery"), {
   loading: () => <div className="aspect-[4/5] animate-pulse rounded-[2rem] bg-sand" />,
@@ -15,7 +17,6 @@ const ProductGallery = nextDynamic(() => import("@/components/product/ProductGal
 const AddToCartPanel = nextDynamic(() => import("@/components/home/AddToCartPanel"), {
   loading: () => <div className="h-24 animate-pulse rounded-2xl bg-sand" />,
 });
-const Price = nextDynamic(() => import("@/components/ui/Price"));
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const idea = servingIdeas.find((s) => s.productSlug === product.id);
   const stock = stockState(product);
   const out = stock?.tone === "out";
+  const off = percentOff(product.priceInr, product.originalPriceInr);
 
   return (
     <SiteShell>
@@ -55,7 +57,14 @@ export default async function ProductPage({ params }: { params: { slug: string }
             </div>
             <h1 className="mt-3 font-display text-3xl leading-tight text-forest sm:text-4xl md:text-5xl">{product.name}</h1>
             <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/50 sm:text-xs">{product.packSize ?? "Pack size to be confirmed"}</p>
-            <div className="mt-5"><Price amount={product.priceInr} className="!text-3xl sm:!text-4xl" /></div>
+            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <Price amount={product.priceInr} original={product.originalPriceInr} className="!text-3xl sm:!text-4xl" originalClassName="text-lg sm:text-xl" />
+              {off && product.priceInr != null && product.originalPriceInr != null && (
+                <span className="rounded-full bg-leaf/15 px-3 py-1 text-xs font-bold text-leaf">
+                  {off}% off · You save {formatInr(product.originalPriceInr - product.priceInr)}
+                </span>
+              )}
+            </div>
             <p className="mt-5 text-base leading-relaxed text-ink/70 sm:text-lg">{product.longDescription}</p>
             <div className="mt-7"><AddToCartPanel productId={product.id} name={product.name} disabled={out} /></div>
 

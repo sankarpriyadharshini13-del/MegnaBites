@@ -49,7 +49,7 @@ export default function SearchDialog() {
                 <span className="block font-display text-lg text-forest">{p.name}</span>
                 <span className="block text-sm text-ink/60">{p.description}</span>
               </span>
-              <Price amount={p.priceInr} className="shrink-0 !text-base" />
+              <span className="shrink-0 text-right"><Price amount={p.priceInr} original={p.originalPriceInr} className="!text-base" originalClassName="text-xs" /></span>
             </Link>
           </li>
         ))}

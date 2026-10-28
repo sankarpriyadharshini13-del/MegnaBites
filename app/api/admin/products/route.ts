@@ -30,11 +30,12 @@ export const POST = handle(async (req) => {
     for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
   }
 
-  const row = {
+  const row: Record<string, unknown> = {
     id,
     name: input.name,
     sku: skuFor(input.name, input.packSize, (existing?.sku as string) ?? ""),
     price: input.price,
+    original_price: input.originalPrice,
     stock: input.stock,
     pack_size: input.packSize,
     tag: input.tag,
@@ -61,6 +62,14 @@ export const POST = handle(async (req) => {
     if (!error) {
       saved = data;
       break;
+    }
+    // Before the original-price migration is applied, products without one still save normally.
+    if (["PGRST204", "42703"].includes(error.code ?? "") && "original_price" in row) {
+      if (input.originalPrice != null)
+        throw new HttpError(503, "To save an original price, run supabase/migrations/20261029000000_original_price.sql in the Supabase SQL Editor first.", "SCHEMA_MISSING");
+      delete row.original_price;
+      attempt--;
+      continue;
     }
     // Two admins creating products at the same moment can race for a barcode; try the next one.
     if (error.code === "23505" && !existing && attempt < 2) {

@@ -137,10 +137,10 @@ export default function ProductUsage() {
                             {stock && <span className={stock.tone === "out" ? " text-forest" : " text-clay"}> · {stock.label}</span>}
                           </p>
                         </div>
-                        <Price amount={product.priceInr} className={product.priceInr == null ? "!text-xs" : "shrink-0 !text-2xl"} />
+                        <span className="shrink-0 text-right"><Price amount={product.priceInr} original={product.originalPriceInr} className={product.priceInr == null ? "!text-xs" : "!text-2xl"} originalClassName="text-xs" /></span>
                       </div>
                       <div className="mt-4 flex gap-2.5">
-                        <AddToCartButton productId={product.id} name={product.name} disabled={stock?.tone === "out"} compact className="!min-h-10 flex-1 !px-4 !text-sm !shadow-none hover:!translate-y-0" />
+                        <AddToCartButton productId={product.id} name={product.name} disabled={stock?.tone === "out"} compact className="!min-h-10 flex-1 !px-4 !text-sm !shadow-none hover:!translate-y-0" stepperClassName="!w-auto flex-1" />
                         <Link href={href} className="focus-ring inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-forest/15 bg-white px-3 text-sm font-semibold text-forest transition-colors hover:border-forest">
                           View details <ArrowIcon width={14} height={14} />
                         </Link>
